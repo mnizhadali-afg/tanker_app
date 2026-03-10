@@ -1,0 +1,21 @@
+{
+  "name": "tanker-app",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "test:shared": "npm run test --workspace=packages/shared",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,122 @@
+/* Invoice print styles — do NOT use Tailwind classes here, they may be purged */
+.invoice-print-root {
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+  font-size: 11px;
+  color: #111827;
+  padding: 24px;
+  direction: inherit; /* inherits from <html dir> */
+}
+
+.invoice-print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #1d4ed8;
+  padding-bottom: 12px;
+}
+
+.invoice-print-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin: 0 0 4px 0;
+}
+
+.invoice-print-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  background: #f9fafb;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+
+.invoice-print-meta-item label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.invoice-print-meta-item span {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.invoice-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.invoice-print-table th {
+  background: #1d4ed8;
+  color: #fff;
+  padding: 5px 6px;
+  text-align: start;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.invoice-print-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.invoice-print-table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+.invoice-print-totals {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+}
+
+.invoice-print-totals-item {
+  text-align: start;
+}
+
+.invoice-print-totals-item label {
+  font-size: 9px;
+  color: #6b7280;
+  display: block;
+}
+
+.invoice-print-totals-item span {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.invoice-print-footer {
+  margin-top: 32px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.invoice-print-signature {
+  text-align: center;
+}
+
+.invoice-print-signature .line {
+  border-top: 1px solid #9ca3af;
+  margin-top: 32px;
+  padding-top: 4px;
+}
+
+@media print {
+  body { margin: 0; }
+  .invoice-print-root { padding: 12px; }
+  @page { margin: 10mm; size: A4 landscape; }
+}

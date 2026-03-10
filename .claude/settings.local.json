@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @nestjs/cli new backend --package-manager npm --skip-git)",
+      "Bash(npm show @nestjs/config versions --json)",
+      "Bash(npx tsc --noEmit)"
+    ]
+  }
+}

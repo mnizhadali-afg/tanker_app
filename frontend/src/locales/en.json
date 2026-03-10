@@ -1,0 +1,233 @@
+{
+  "app": {
+    "title": "Tanker Accounting System",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "print": "Print",
+    "export": "Export",
+    "confirm": "Confirm",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "notes": "Notes",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "all": "All"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "loginTitle": "Sign In",
+    "loginButton": "Sign In",
+    "invalidCredentials": "Invalid username or password",
+    "sessionExpired": "Your session has expired. Please sign in again"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "products": "Products",
+    "ports": "Ports",
+    "licenses": "Licenses",
+    "contracts": "Contracts",
+    "invoices": "Invoices",
+    "payments": "Payments",
+    "reports": "Reports",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "new": "New Account",
+    "name": "Name",
+    "type": "Type",
+    "phone": "Phone",
+    "address": "Address",
+    "types": {
+      "customer": "Customer",
+      "producer": "Producer",
+      "monetary": "Monetary Account",
+      "other": "Other"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "new": "New Product",
+    "name": "Product Name",
+    "unit": "Unit"
+  },
+  "ports": {
+    "title": "Ports",
+    "new": "New Port",
+    "name": "Port Name",
+    "producer": "Producer"
+  },
+  "licenses": {
+    "title": "Licenses",
+    "new": "New License",
+    "licenseNumber": "License Number",
+    "validFrom": "Valid From",
+    "validTo": "Valid To",
+    "product": "Product",
+    "producer": "Producer"
+  },
+  "contracts": {
+    "title": "Contracts",
+    "new": "New Contract",
+    "code": "Contract Code",
+    "customer": "Customer",
+    "product": "Product",
+    "calculationType": "Calculation Type",
+    "defaultRatePerTonAfn": "Default Rate/Ton (AFN)",
+    "defaultRatePerTonUsd": "Default Rate/Ton (USD)",
+    "defaultExchangeRate": "Default Exchange Rate",
+    "calculationTypes": {
+      "cost_based": "Cost-Based (AFN)",
+      "cost_based_usd": "Cost-Based (USD)",
+      "per_ton": "Per Ton"
+    }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "new": "New Invoice",
+    "invoiceNumber": "Invoice Number",
+    "contract": "Contract",
+    "customer": "Customer",
+    "issueDate": "Issue Date",
+    "status": "Status",
+    "finalize": "Finalize",
+    "cancel": "Cancel Invoice",
+    "finalizeConfirm": "Are you sure you want to finalize this invoice? It cannot be edited after finalization.",
+    "cancelConfirm": "Are you sure you want to cancel this invoice?",
+    "statuses": {
+      "draft": "Draft",
+      "final": "Final",
+      "canceled": "Canceled"
+    },
+    "totalAfn": "Total (AFN)",
+    "totalUsd": "Total (USD)"
+  },
+  "tankers": {
+    "title": "Tankers",
+    "tankerNumber": "Tanker Number",
+    "entryDate": "Entry Date",
+    "port": "Port",
+    "producer": "Producer",
+    "license": "License",
+    "productWeight": "Product Weight",
+    "billWeight": "Bill of Lading Weight",
+    "tonnageBasis": "Tonnage Basis",
+    "tonnageBasisOptions": {
+      "product_weight": "Product Weight",
+      "bill_weight": "Bill Weight"
+    },
+    "exchangeRate": "Exchange Rate",
+    "costs": {
+      "product": "Product",
+      "publicBenefits": "Public Benefits",
+      "fmn60": "FMN 60",
+      "fmn20": "FMN 20",
+      "qualityControl": "Quality Control",
+      "dozbalagh": "Dozbalagh",
+      "escort": "Escort",
+      "bascule": "Bascule",
+      "overnight": "Overnight",
+      "bankCommission": "Bank Commission",
+      "rentAfn": "Rent (AFN)",
+      "miscAfn": "Miscellaneous (AFN)",
+      "brokerCommission": "Broker Commission",
+      "exchangerCommission": "Exchanger Commission",
+      "licenseCommission": "License Commission",
+      "rentUsd": "Rent (USD)",
+      "miscUsd": "Miscellaneous (USD)",
+      "transport": "Transport",
+      "commodityPercentDebt": "Commodity % Debt"
+    },
+    "ratePerTonAfn": "Rate/Ton (AFN)",
+    "ratePerTonUsd": "Rate/Ton (USD)",
+    "customerDebtAfn": "Customer Debt (AFN)",
+    "customerDebtUsd": "Customer Debt (USD)",
+    "customerDebtCommodity": "Commodity Debt",
+    "customer": "Customer",
+    "producer_col": "Producer"
+  },
+  "payments": {
+    "title": "Payments",
+    "new": "New Payment",
+    "type": "Type",
+    "types": {
+      "payment_in": "Payment In",
+      "payment_out": "Payment Out",
+      "exchange": "Currency Exchange"
+    },
+    "level": "Payment Level",
+    "levels": {
+      "customer": "Customer",
+      "contract": "Contract",
+      "invoice": "Invoice"
+    },
+    "amountAfn": "Amount (AFN)",
+    "amountUsd": "Amount (USD)",
+    "exchangeRate": "Exchange Rate",
+    "transactionDate": "Transaction Date",
+    "monetaryAccount": "Monetary Account",
+    "payer": "Payer",
+    "payee": "Payee"
+  },
+  "reports": {
+    "title": "Reports",
+    "customerBalance": "Customer Balance",
+    "invoiceStatus": "Invoice Status",
+    "transactionHistory": "Transaction History",
+    "balanceAfn": "AFN Balance",
+    "balanceUsd": "USD Balance",
+    "balanceCommodity": "Commodity Balance",
+    "totalDebt": "Total Debt",
+    "totalPaid": "Total Paid",
+    "outstanding": "Outstanding",
+    "dateFrom": "From Date",
+    "dateTo": "To Date"
+  },
+  "users": {
+    "title": "Users",
+    "new": "New User",
+    "username": "Username",
+    "role": "Role",
+    "roles": {
+      "admin": "System Admin",
+      "accountant": "Accountant",
+      "data_entry": "Data Entry Operator",
+      "viewer": "Viewer"
+    },
+    "changePassword": "Change Password",
+    "newPassword": "New Password"
+  },
+  "currency": {
+    "afn": "AFN",
+    "usd": "USD"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "serverError": "Server error. Please try again",
+    "notFound": "Item not found",
+    "forbidden": "Access denied"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "perPage": "per page",
+    "total": "Total"
+  }
+}

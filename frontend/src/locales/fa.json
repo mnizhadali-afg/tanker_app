@@ -1,0 +1,233 @@
+{
+  "app": {
+    "title": "سیستم حسابداری تانکرها",
+    "loading": "در حال بارگذاری...",
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "add": "افزودن",
+    "search": "جستجو",
+    "filter": "فیلتر",
+    "print": "چاپ",
+    "export": "خروجی",
+    "confirm": "تأیید",
+    "back": "بازگشت",
+    "yes": "بله",
+    "no": "خیر",
+    "actions": "عملیات",
+    "status": "وضعیت",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "notes": "یادداشت‌ها",
+    "createdAt": "تاریخ ایجاد",
+    "updatedAt": "تاریخ به‌روزرسانی",
+    "all": "همه"
+  },
+  "auth": {
+    "login": "ورود",
+    "logout": "خروج",
+    "username": "نام کاربری",
+    "password": "رمز عبور",
+    "loginTitle": "ورود به سیستم",
+    "loginButton": "ورود",
+    "invalidCredentials": "نام کاربری یا رمز عبور اشتباه است",
+    "sessionExpired": "نشست شما منقضی شده است. لطفاً دوباره وارد شوید"
+  },
+  "nav": {
+    "dashboard": "داشبورد",
+    "accounts": "حساب‌ها",
+    "products": "محصولات",
+    "ports": "بنادر",
+    "licenses": "جوازها",
+    "contracts": "قراردادها",
+    "invoices": "فاکتورها",
+    "payments": "پرداخت‌ها",
+    "reports": "گزارش‌ها",
+    "users": "کاربران",
+    "settings": "تنظیمات"
+  },
+  "accounts": {
+    "title": "حساب‌ها",
+    "new": "حساب جدید",
+    "name": "نام",
+    "type": "نوع",
+    "phone": "تلفن",
+    "address": "آدرس",
+    "types": {
+      "customer": "مشتری",
+      "producer": "محصول‌کننده",
+      "monetary": "حساب پولی",
+      "other": "سایر"
+    }
+  },
+  "products": {
+    "title": "محصولات",
+    "new": "محصول جدید",
+    "name": "نام محصول",
+    "unit": "واحد"
+  },
+  "ports": {
+    "title": "بنادر",
+    "new": "بندر جدید",
+    "name": "نام بندر",
+    "producer": "محصول‌کننده"
+  },
+  "licenses": {
+    "title": "جوازها",
+    "new": "جواز جدید",
+    "licenseNumber": "شماره جواز",
+    "validFrom": "تاریخ شروع",
+    "validTo": "تاریخ انقضا",
+    "product": "محصول",
+    "producer": "محصول‌کننده"
+  },
+  "contracts": {
+    "title": "قراردادها",
+    "new": "قرارداد جدید",
+    "code": "کد قرارداد",
+    "customer": "مشتری",
+    "product": "محصول",
+    "calculationType": "نوع محاسبه",
+    "defaultRatePerTonAfn": "نرخ پیش‌فرض فی‌تن (افغانی)",
+    "defaultRatePerTonUsd": "نرخ پیش‌فرض فی‌تن (دلار)",
+    "defaultExchangeRate": "نرخ ارز پیش‌فرض",
+    "calculationTypes": {
+      "cost_based": "هزینه‌ای (افغانی)",
+      "cost_based_usd": "هزینه‌ای (دلار)",
+      "per_ton": "فی‌تن"
+    }
+  },
+  "invoices": {
+    "title": "فاکتورها",
+    "new": "فاکتور جدید",
+    "invoiceNumber": "شماره فاکتور",
+    "contract": "قرارداد",
+    "customer": "مشتری",
+    "issueDate": "تاریخ صدور",
+    "status": "وضعیت",
+    "finalize": "نهایی کردن",
+    "cancel": "لغو فاکتور",
+    "finalizeConfirm": "آیا از نهایی کردن این فاکتور اطمینان دارید؟ پس از نهایی شدن قابل ویرایش نخواهد بود.",
+    "cancelConfirm": "آیا از لغو این فاکتور اطمینان دارید؟",
+    "statuses": {
+      "draft": "پیش‌نویس",
+      "final": "نهایی",
+      "canceled": "لغو شده"
+    },
+    "totalAfn": "جمع کل (افغانی)",
+    "totalUsd": "جمع کل (دلار)"
+  },
+  "tankers": {
+    "title": "تانکرها",
+    "tankerNumber": "شماره تانکر",
+    "entryDate": "تاریخ ورود",
+    "port": "بندر",
+    "producer": "محصول‌کننده",
+    "license": "جواز",
+    "productWeight": "وزن محصولی",
+    "billWeight": "وزن بارنامه",
+    "tonnageBasis": "مبنای تناژ",
+    "tonnageBasisOptions": {
+      "product_weight": "وزن محصولی",
+      "bill_weight": "وزن بارنامه"
+    },
+    "exchangeRate": "نرخ ارز",
+    "costs": {
+      "product": "محصولی",
+      "publicBenefits": "فواید عامه",
+      "fmn60": "ف.م.ن 60 پول",
+      "fmn20": "ف.م.ن 20 پول",
+      "qualityControl": "کنترل کیفیت",
+      "dozbalagh": "دوزبلاغ",
+      "escort": "اسکورت",
+      "bascule": "باسکول",
+      "overnight": "شبخواب",
+      "bankCommission": "کمیشن بانک",
+      "rentAfn": "کرایه افغانی",
+      "miscAfn": "متفرقه افغانی",
+      "brokerCommission": "کمیشن بارچالان",
+      "exchangerCommission": "کمیشن صراف",
+      "licenseCommission": "کمیشن جواز",
+      "rentUsd": "کرایه دلاری",
+      "miscUsd": "متفرقه دلاری",
+      "transport": "ترانسپورت",
+      "commodityPercentDebt": "فیصدی جنسی"
+    },
+    "ratePerTonAfn": "نرخ فی‌تن (افغانی)",
+    "ratePerTonUsd": "نرخ فی‌تن (دلار)",
+    "customerDebtAfn": "بدهی مشتری (افغانی)",
+    "customerDebtUsd": "بدهی مشتری (دلار)",
+    "customerDebtCommodity": "بدهی جنسی",
+    "customer": "مشتری",
+    "producer_col": "تولیدکننده"
+  },
+  "payments": {
+    "title": "پرداخت‌ها",
+    "new": "پرداخت جدید",
+    "type": "نوع",
+    "types": {
+      "payment_in": "دریافت",
+      "payment_out": "پرداخت",
+      "exchange": "تبدیل ارز"
+    },
+    "level": "سطح پرداخت",
+    "levels": {
+      "customer": "مشتری",
+      "contract": "قرارداد",
+      "invoice": "فاکتور"
+    },
+    "amountAfn": "مبلغ (افغانی)",
+    "amountUsd": "مبلغ (دلار)",
+    "exchangeRate": "نرخ ارز",
+    "transactionDate": "تاریخ تراکنش",
+    "monetaryAccount": "حساب پولی",
+    "payer": "پرداخت‌کننده",
+    "payee": "دریافت‌کننده"
+  },
+  "reports": {
+    "title": "گزارش‌ها",
+    "customerBalance": "موازنه مشتری",
+    "invoiceStatus": "وضعیت فاکتورها",
+    "transactionHistory": "تاریخچه تراکنش‌ها",
+    "balanceAfn": "موازنه افغانی",
+    "balanceUsd": "موازنه دلار",
+    "balanceCommodity": "موازنه جنسی",
+    "totalDebt": "کل بدهی",
+    "totalPaid": "کل پرداخت‌شده",
+    "outstanding": "باقی‌مانده",
+    "dateFrom": "از تاریخ",
+    "dateTo": "تا تاریخ"
+  },
+  "users": {
+    "title": "کاربران",
+    "new": "کاربر جدید",
+    "username": "نام کاربری",
+    "role": "نقش",
+    "roles": {
+      "admin": "مدیر سیستم",
+      "accountant": "حسابدار",
+      "data_entry": "اپراتور ثبت",
+      "viewer": "مشاهده‌گر"
+    },
+    "changePassword": "تغییر رمز عبور",
+    "newPassword": "رمز عبور جدید"
+  },
+  "currency": {
+    "afn": "افغانی",
+    "usd": "دلار"
+  },
+  "errors": {
+    "required": "این فیلد الزامی است",
+    "invalidEmail": "ایمیل معتبر نیست",
+    "serverError": "خطای سرور. لطفاً دوباره تلاش کنید",
+    "notFound": "مورد مورد نظر یافت نشد",
+    "forbidden": "دسترسی ندارید"
+  },
+  "pagination": {
+    "page": "صفحه",
+    "of": "از",
+    "perPage": "در صفحه",
+    "total": "تعداد کل"
+  }
+}

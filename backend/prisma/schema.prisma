@@ -1,0 +1,363 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  admin
+  accountant
+  data_entry
+  viewer
+}
+
+enum AccountType {
+  customer
+  producer
+  monetary
+  other
+}
+
+enum CalculationType {
+  cost_based
+  cost_based_usd
+  per_ton
+}
+
+enum InvoiceStatus {
+  draft
+  final
+  canceled
+}
+
+enum TonnageBasis {
+  product_weight
+  bill_weight
+}
+
+enum TransactionType {
+  payment_in
+  payment_out
+  exchange
+}
+
+enum PaymentLevel {
+  customer
+  contract
+  invoice
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(data_entry)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens        RefreshToken[]
+  createdInvoices      Invoice[]            @relation("InvoiceCreatedBy")
+  finalizedInvoices    Invoice[]            @relation("InvoiceFinalizedBy")
+  canceledInvoices     Invoice[]            @relation("InvoiceCanceledBy")
+  monetaryTransactions MonetaryTransaction[]
+  commodityTransactions CommodityTransaction[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Account {
+  id        String      @id @default(uuid())
+  name      String
+  type      AccountType
+  phone     String?
+  address   String?
+  notes     String?
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  ports                      Port[]
+  licenses                   License[]
+  contractsAsCustomer        Contract[]            @relation("ContractCustomer")
+  invoicesAsCustomer         Invoice[]             @relation("InvoiceCustomer")
+  tankerProducers            Tanker[]              @relation("TankerProducer")
+  transactionsAsPayer        MonetaryTransaction[] @relation("TransactionPayer")
+  transactionsAsPayee        MonetaryTransaction[] @relation("TransactionPayee")
+  transactionsAsMonetary     MonetaryTransaction[] @relation("TransactionMonetary")
+  commodityTransactions      CommodityTransaction[]
+
+  @@index([type])
+  @@map("accounts")
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  unit      String
+  notes     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  licenses              License[]
+  contracts             Contract[]
+  commodityTransactions CommodityTransaction[]
+
+  @@map("products")
+}
+
+model Port {
+  id         String   @id @default(uuid())
+  name       String
+  producerId String   @map("producer_id")
+  notes      String?
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  producer Account  @relation(fields: [producerId], references: [id])
+  tankers  Tanker[]
+
+  @@index([producerId])
+  @@map("ports")
+}
+
+model License {
+  id             String   @id @default(uuid())
+  licenseNumber  String   @map("license_number")
+  productId      String   @map("product_id")
+  producerId     String   @map("producer_id")
+  validFrom      DateTime @map("valid_from")
+  validTo        DateTime @map("valid_to")
+  notes          String?
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  product  Product  @relation(fields: [productId], references: [id])
+  producer Account  @relation(fields: [producerId], references: [id])
+  tankers  Tanker[]
+
+  @@index([producerId])
+  @@index([productId])
+  @@map("licenses")
+}
+
+model Contract {
+  id                   String          @id @default(uuid())
+  code                 String          @unique
+  customerId           String          @map("customer_id")
+  productId            String          @map("product_id")
+  calculationType      CalculationType @map("calculation_type")
+  defaultRatePerTonAfn Decimal?        @map("default_rate_per_ton_afn") @db.Decimal(18, 4)
+  defaultRatePerTonUsd Decimal?        @map("default_rate_per_ton_usd") @db.Decimal(18, 4)
+  defaultExchangeRate  Decimal?        @map("default_exchange_rate") @db.Decimal(18, 4)
+  otherDefaultCosts    Json?           @map("other_default_costs")
+  notes                String?
+  isActive             Boolean         @default(true) @map("is_active")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  customer              Account               @relation("ContractCustomer", fields: [customerId], references: [id])
+  product               Product               @relation(fields: [productId], references: [id])
+  invoices              Invoice[]
+  tankers               Tanker[]
+  monetaryTransactions  MonetaryTransaction[]
+  commodityTransactions CommodityTransaction[]
+
+  @@index([customerId])
+  @@map("contracts")
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique @map("invoice_number")
+  contractId    String        @map("contract_id")
+  customerId    String        @map("customer_id")
+  status        InvoiceStatus @default(draft)
+  issueDate     DateTime      @map("issue_date")
+  notes         String?
+  createdById   String        @map("created_by")
+  finalizedAt   DateTime?     @map("finalized_at")
+  finalizedById String?       @map("finalized_by")
+  canceledAt    DateTime?     @map("canceled_at")
+  canceledById  String?       @map("canceled_by")
+  parentId      String?       @map("parent_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  contract              Contract              @relation(fields: [contractId], references: [id])
+  customer              Account               @relation("InvoiceCustomer", fields: [customerId], references: [id])
+  createdBy             User                  @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+  finalizedBy           User?                 @relation("InvoiceFinalizedBy", fields: [finalizedById], references: [id])
+  canceledBy            User?                 @relation("InvoiceCanceledBy", fields: [canceledById], references: [id])
+  parent                Invoice?              @relation("InvoiceAdjustments", fields: [parentId], references: [id])
+  adjustments           Invoice[]             @relation("InvoiceAdjustments")
+  tankers               Tanker[]
+  monetaryTransactions  MonetaryTransaction[]
+  commodityTransactions CommodityTransaction[]
+
+  @@index([customerId])
+  @@index([contractId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Tanker {
+  id         String  @id @default(uuid())
+  invoiceId  String  @map("invoice_id")
+  contractId String  @map("contract_id")
+  portId     String  @map("port_id")
+  producerId String  @map("producer_id")
+  licenseId  String? @map("license_id")
+
+  tankerNumber String   @map("tanker_number")
+  entryDate    DateTime @map("entry_date")
+
+  // Weight
+  productWeight Decimal      @map("product_weight") @db.Decimal(18, 4)
+  billWeight    Decimal      @map("bill_weight") @db.Decimal(18, 4)
+  tonnageBasis  TonnageBasis @default(product_weight) @map("tonnage_basis")
+
+  // Exchange rate
+  exchangeRate Decimal @map("exchange_rate") @db.Decimal(18, 4)
+
+  // ── Shared costs (customer AND producer) ──────────────────────────────────
+  costProduct        Decimal @default(0) @map("cost_product") @db.Decimal(18, 4)
+  costPublicBenefits Decimal @default(0) @map("cost_public_benefits") @db.Decimal(18, 4)
+  costFmn60          Decimal @default(0) @map("cost_fmn_60") @db.Decimal(18, 4)
+  costFmn20          Decimal @default(0) @map("cost_fmn_20") @db.Decimal(18, 4)
+  costQualityControl Decimal @default(0) @map("cost_quality_control") @db.Decimal(18, 4)
+
+  // ── Separate AFN costs (customer / producer pairs) ────────────────────────
+  costDozbalagh_customer          Decimal @default(0) @map("cost_dozbalagh_customer") @db.Decimal(18, 4)
+  costDozbalagh_producer          Decimal @default(0) @map("cost_dozbalagh_producer") @db.Decimal(18, 4)
+  costEscort_customer             Decimal @default(0) @map("cost_escort_customer") @db.Decimal(18, 4)
+  costEscort_producer             Decimal @default(0) @map("cost_escort_producer") @db.Decimal(18, 4)
+  costBascule_customer            Decimal @default(0) @map("cost_bascule_customer") @db.Decimal(18, 4)
+  costBascule_producer            Decimal @default(0) @map("cost_bascule_producer") @db.Decimal(18, 4)
+  costOvernight_customer          Decimal @default(0) @map("cost_overnight_customer") @db.Decimal(18, 4)
+  costOvernight_producer          Decimal @default(0) @map("cost_overnight_producer") @db.Decimal(18, 4)
+  costBankCommission_customer     Decimal @default(0) @map("cost_bank_commission_customer") @db.Decimal(18, 4)
+  costBankCommission_producer     Decimal @default(0) @map("cost_bank_commission_producer") @db.Decimal(18, 4)
+  costRentAfn_customer            Decimal @default(0) @map("cost_rent_afn_customer") @db.Decimal(18, 4)
+  costRentAfn_producer            Decimal @default(0) @map("cost_rent_afn_producer") @db.Decimal(18, 4)
+  costMiscAfn_customer            Decimal @default(0) @map("cost_misc_afn_customer") @db.Decimal(18, 4)
+  costMiscAfn_producer            Decimal @default(0) @map("cost_misc_afn_producer") @db.Decimal(18, 4)
+  costBrokerCommission_customer   Decimal @default(0) @map("cost_broker_commission_customer") @db.Decimal(18, 4)
+  costBrokerCommission_producer   Decimal @default(0) @map("cost_broker_commission_producer") @db.Decimal(18, 4)
+  costExchangerCommission_customer Decimal @default(0) @map("cost_exchanger_commission_customer") @db.Decimal(18, 4)
+  costExchangerCommission_producer Decimal @default(0) @map("cost_exchanger_commission_producer") @db.Decimal(18, 4)
+
+  // ── Separate USD costs (customer / producer pairs) ────────────────────────
+  costLicenseCommission_customer  Decimal @default(0) @map("cost_license_commission_customer") @db.Decimal(18, 4)
+  costLicenseCommission_producer  Decimal @default(0) @map("cost_license_commission_producer") @db.Decimal(18, 4)
+  costRentUsd_customer            Decimal @default(0) @map("cost_rent_usd_customer") @db.Decimal(18, 4)
+  costRentUsd_producer            Decimal @default(0) @map("cost_rent_usd_producer") @db.Decimal(18, 4)
+  costMiscUsd_customer            Decimal @default(0) @map("cost_misc_usd_customer") @db.Decimal(18, 4)
+  costMiscUsd_producer            Decimal @default(0) @map("cost_misc_usd_producer") @db.Decimal(18, 4)
+
+  // ── Customer-only ─────────────────────────────────────────────────────────
+  transportCost          Decimal @default(0) @map("transport_cost") @db.Decimal(18, 4)
+  commodityPercentDebt   Decimal @default(0) @map("commodity_percent_debt") @db.Decimal(18, 4)
+
+  // ── Per-ton fields ────────────────────────────────────────────────────────
+  ratePerTonAfn Decimal @default(0) @map("rate_per_ton_afn") @db.Decimal(18, 4)
+  ratePerTonUsd Decimal @default(0) @map("rate_per_ton_usd") @db.Decimal(18, 4)
+
+  // ── Stored calculated outputs ─────────────────────────────────────────────
+  customerDebtAfn       Decimal @default(0) @map("customer_debt_afn") @db.Decimal(18, 4)
+  customerDebtUsd       Decimal @default(0) @map("customer_debt_usd") @db.Decimal(18, 4)
+  customerDebtCommodity Decimal @default(0) @map("customer_debt_commodity") @db.Decimal(18, 4)
+  producerReceivableAfn Decimal @default(0) @map("producer_receivable_afn") @db.Decimal(18, 4)
+  producerReceivableUsd Decimal @default(0) @map("producer_receivable_usd") @db.Decimal(18, 4)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
+  port     Port     @relation(fields: [portId], references: [id])
+  producer Account  @relation("TankerProducer", fields: [producerId], references: [id])
+  license  License? @relation(fields: [licenseId], references: [id])
+
+  @@index([invoiceId])
+  @@index([contractId])
+  @@map("tankers")
+}
+
+model MonetaryTransaction {
+  id               String          @id @default(uuid())
+  type             TransactionType
+  payerAccountId   String?         @map("payer_account_id")
+  payeeAccountId   String?         @map("payee_account_id")
+  monetaryAccountId String?        @map("monetary_account_id")
+  linkedLevel      PaymentLevel    @map("linked_level")
+  customerId       String?         @map("customer_id")
+  contractId       String?         @map("contract_id")
+  invoiceId        String?         @map("invoice_id")
+  amountAfn        Decimal         @default(0) @map("amount_afn") @db.Decimal(18, 4)
+  amountUsd        Decimal         @default(0) @map("amount_usd") @db.Decimal(18, 4)
+  exchangeRate     Decimal?        @map("exchange_rate") @db.Decimal(18, 4)
+  transactionDate  DateTime        @map("transaction_date")
+  notes            String?
+  createdById      String          @map("created_by")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  payer           Account?  @relation("TransactionPayer", fields: [payerAccountId], references: [id])
+  payee           Account?  @relation("TransactionPayee", fields: [payeeAccountId], references: [id])
+  monetaryAccount Account?  @relation("TransactionMonetary", fields: [monetaryAccountId], references: [id])
+  contract        Contract? @relation(fields: [contractId], references: [id])
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id])
+  createdBy       User      @relation(fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@index([invoiceId])
+  @@index([contractId])
+  @@map("monetary_transactions")
+}
+
+model CommodityTransaction {
+  id              String   @id @default(uuid())
+  customerId      String   @map("customer_id")
+  contractId      String?  @map("contract_id")
+  invoiceId       String?  @map("invoice_id")
+  productId       String   @map("product_id")
+  quantity        Decimal  @db.Decimal(18, 4)
+  unit            String
+  transactionDate DateTime @map("transaction_date")
+  notes           String?
+  createdById     String   @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  customer   Account   @relation(fields: [customerId], references: [id])
+  contract   Contract? @relation(fields: [contractId], references: [id])
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id])
+  product    Product   @relation(fields: [productId], references: [id])
+  createdBy  User      @relation(fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@map("commodity_transactions")
+}
