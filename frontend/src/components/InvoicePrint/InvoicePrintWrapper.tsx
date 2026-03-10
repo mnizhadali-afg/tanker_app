@@ -43,13 +43,13 @@ export default function InvoicePrintWrapper({ invoice }: Props) {
       <div className="hidden">
         <div ref={printRef}>
           {calcType === 'per_ton' && (
-            <PerTonTemplate invoice={invoice as Parameters<typeof PerTonTemplate>[0]['invoice']} />
+            <PerTonTemplate invoice={invoice as unknown as Parameters<typeof PerTonTemplate>[0]['invoice']} />
           )}
           {calcType === 'cost_based' && (
-            <CostBasedTemplate invoice={invoice as Parameters<typeof CostBasedTemplate>[0]['invoice']} />
+            <CostBasedTemplate invoice={invoice as unknown as Parameters<typeof CostBasedTemplate>[0]['invoice']} />
           )}
           {calcType === 'cost_based_usd' && (
-            <CostBasedUsdTemplate invoice={invoice as Parameters<typeof CostBasedUsdTemplate>[0]['invoice']} />
+            <CostBasedUsdTemplate invoice={invoice as unknown as Parameters<typeof CostBasedUsdTemplate>[0]['invoice']} />
           )}
         </div>
       </div>

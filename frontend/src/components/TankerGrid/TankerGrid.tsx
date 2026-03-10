@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import TankerRowComponent from './TankerRow'
-import { useTankerGrid, buildEmptyRow, type TankerRow } from './useTankerGrid'
+import { useTankerGrid, type TankerRow } from './useTankerGrid'
 import { useKeyboardNav, usePasteHandler } from './useKeyboardNav'
 import { getVisibleColumns } from './columnDefs'
 import api from '../../lib/axios'
@@ -17,7 +17,7 @@ interface Props {
 
 // Debounce helper
 function useDebounce<T extends (...args: unknown[]) => unknown>(fn: T, ms: number): T {
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   return useCallback((...args: unknown[]) => {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => fn(...args), ms)

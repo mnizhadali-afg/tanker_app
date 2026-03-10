@@ -6,6 +6,7 @@ import { formatNumber } from '../../utils/formatting'
 import api from '../../lib/axios'
 
 interface CustomerBalance {
+  id: string
   customer: { id: string; name: string }
   balanceAfn: number
   balanceUsd: number
@@ -20,7 +21,9 @@ export default function CustomerBalanceReport() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/reports/customer-balances').then((r) => setRows(r.data)).finally(() => setLoading(false))
+    api.get('/reports/customer-balances')
+      .then((r) => setRows(r.data.map((item: Omit<CustomerBalance, 'id'>) => ({ ...item, id: item.customer.id }))))
+      .finally(() => setLoading(false))
   }, [])
 
   const columns: Column<CustomerBalance>[] = [
