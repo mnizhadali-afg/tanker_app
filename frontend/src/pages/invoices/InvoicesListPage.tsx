@@ -25,6 +25,8 @@ export default function InvoicesListPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<Invoice | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   const fetchInvoices = () => {
     const params = statusFilter ? `?status=${statusFilter}` : '';
@@ -37,6 +39,22 @@ export default function InvoicesListPage() {
   useEffect(() => {
     fetchInvoices();
   }, [statusFilter]);
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCanceling(true);
+    try {
+      await api.patch(`/invoices/${cancelTarget.id}/cancel`);
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === cancelTarget.id ? { ...inv, status: 'canceled' } : inv,
+        ),
+      );
+      setCancelTarget(null);
+    } finally {
+      setCanceling(false);
+    }
+  };
 
   const q = search.trim().toLowerCase();
   const filtered = invoices.filter(
@@ -84,6 +102,28 @@ export default function InvoicesListPage() {
       key: 'tankers',
       label: t('tankers.title'),
       render: (r) => formatNumber(r._count.tankers, locale, 0),
+    },
+    {
+      key: 'actions',
+      label: t('app.actions'),
+      render: (r) => (
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => navigate(`/invoices/${r.id}`)}
+            className="text-xs text-primary-600 hover:text-primary-800 font-medium px-2 py-1 rounded hover:bg-primary-50"
+          >
+            {t('app.edit')}
+          </button>
+          {r.status === 'draft' && (
+            <button
+              onClick={() => setCancelTarget(r)}
+              className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50"
+            >
+              {t('invoices.cancel')}
+            </button>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -148,6 +188,38 @@ export default function InvoicesListPage() {
         loading={loading}
         onRowClick={(row) => navigate(`/invoices/${row.id}`)}
       />
+
+      {/* Cancel confirmation dialog */}
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h2 className="text-base font-semibold text-gray-900 mb-2">
+              {t('invoices.cancel')}
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              {t('invoices.cancelConfirm')}
+              {' '}
+              <span className="font-medium">{cancelTarget.invoiceNumber}</span>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setCancelTarget(null)}
+                disabled={canceling}
+                className="text-sm px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                {t('app.cancel')}
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={canceling}
+                className="text-sm px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+              >
+                {canceling ? t('app.loading') : t('invoices.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -53,15 +53,15 @@ export const TANKER_COLUMNS: ColumnDef[] = [
   { key: 'transportCost',                   labelKey: 'tankers.costs.transport',           type: 'number', width: 90, recalcTrigger: true, group: 'customer-afn' },
 
   // ── AFN costs — producer ──────────────────────────────────────────────────
-  { key: 'costDozbalagh_producer',          labelKey: 'tankers.costs.dozbalagh',          type: 'number', width: 90, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costEscort_producer',             labelKey: 'tankers.costs.escort',             type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costBascule_producer',            labelKey: 'tankers.costs.bascule',            type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costOvernight_producer',          labelKey: 'tankers.costs.overnight',          type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costBankCommission_producer',     labelKey: 'tankers.costs.bankCommission',     type: 'number', width: 100, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costRentAfn_producer',            labelKey: 'tankers.costs.rentAfn',            type: 'number', width: 90, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costMiscAfn_producer',            labelKey: 'tankers.costs.miscAfn',            type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costBrokerCommission_producer',   labelKey: 'tankers.costs.brokerCommission',   type: 'number', width: 110, recalcTrigger: true, group: 'producer-afn', isProducer: true },
-  { key: 'costExchangerCommission_producer', labelKey: 'tankers.costs.exchangerCommission', type: 'number', width: 110, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costDozbalagh_producer',          labelKey: 'tankers.costs.dozbalagh_p',          type: 'number', width: 90, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costEscort_producer',             labelKey: 'tankers.costs.escort_p',             type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costBascule_producer',            labelKey: 'tankers.costs.bascule_p',            type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costOvernight_producer',          labelKey: 'tankers.costs.overnight_p',          type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costBankCommission_producer',     labelKey: 'tankers.costs.bankCommission_p',     type: 'number', width: 100, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costRentAfn_producer',            labelKey: 'tankers.costs.rentAfn_p',            type: 'number', width: 90, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costMiscAfn_producer',            labelKey: 'tankers.costs.miscAfn_p',            type: 'number', width: 80, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costBrokerCommission_producer',   labelKey: 'tankers.costs.brokerCommission_p',   type: 'number', width: 110, recalcTrigger: true, group: 'producer-afn', isProducer: true },
+  { key: 'costExchangerCommission_producer', labelKey: 'tankers.costs.exchangerCommission_p', type: 'number', width: 110, recalcTrigger: true, group: 'producer-afn', isProducer: true },
 
   // ── USD costs — customer ──────────────────────────────────────────────────
   { key: 'costLicenseCommission_customer', labelKey: 'tankers.costs.licenseCommission', type: 'number', width: 110, recalcTrigger: true, group: 'customer-usd' },
@@ -69,9 +69,9 @@ export const TANKER_COLUMNS: ColumnDef[] = [
   { key: 'costMiscUsd_customer',           labelKey: 'tankers.costs.miscUsd',           type: 'number', width: 80,  recalcTrigger: true, group: 'customer-usd' },
 
   // ── USD costs — producer ──────────────────────────────────────────────────
-  { key: 'costLicenseCommission_producer', labelKey: 'tankers.costs.licenseCommission', type: 'number', width: 110, recalcTrigger: true, group: 'producer-usd', isProducer: true },
-  { key: 'costRentUsd_producer',           labelKey: 'tankers.costs.rentUsd',           type: 'number', width: 90,  recalcTrigger: true, group: 'producer-usd', isProducer: true },
-  { key: 'costMiscUsd_producer',           labelKey: 'tankers.costs.miscUsd',           type: 'number', width: 80,  recalcTrigger: true, group: 'producer-usd', isProducer: true },
+  { key: 'costLicenseCommission_producer', labelKey: 'tankers.costs.licenseCommission_p', type: 'number', width: 110, recalcTrigger: true, group: 'producer-usd', isProducer: true },
+  { key: 'costRentUsd_producer',           labelKey: 'tankers.costs.rentUsd_p',           type: 'number', width: 90,  recalcTrigger: true, group: 'producer-usd', isProducer: true },
+  { key: 'costMiscUsd_producer',           labelKey: 'tankers.costs.miscUsd_p',           type: 'number', width: 80,  recalcTrigger: true, group: 'producer-usd', isProducer: true },
 
   // ── Customer-only ─────────────────────────────────────────────────────────
   { key: 'commodityPercentDebt', labelKey: 'tankers.costs.commodityPercentDebt', type: 'number', width: 100, recalcTrigger: true },

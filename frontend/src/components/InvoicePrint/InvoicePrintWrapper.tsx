@@ -39,8 +39,10 @@ export default function InvoicePrintWrapper({ invoice }: Props) {
         {t('app.print')}
       </button>
 
-      {/* Hidden print area */}
-      <div className="hidden">
+      {/* Print area — positioned off-screen so layout is computed but not visible.
+          Do NOT use display:none — that CSS class gets copied into the print iframe
+          and hides the content, resulting in a blank printout. */}
+      <div style={{ position: 'fixed', top: 0, left: '-10000px', width: '297mm' }} aria-hidden="true">
         <div ref={printRef}>
           {calcType === 'per_ton' && (
             <PerTonTemplate invoice={invoice as unknown as Parameters<typeof PerTonTemplate>[0]['invoice']} />

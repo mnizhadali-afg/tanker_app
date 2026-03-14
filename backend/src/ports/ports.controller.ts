@@ -39,7 +39,7 @@ export class PortsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'accountant')
-  deactivate(@Param('id') id: string) {
-    return this.portsService.deactivate(id)
+  delete(@Param('id') id: string) {
+    return this.portsService.delete(id)
   }
 }

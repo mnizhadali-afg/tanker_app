@@ -7,6 +7,7 @@ export interface TankerRow extends Record<string, unknown> {
   _dirty?: boolean        // has unsaved changes
   _saving?: boolean       // currently saving to backend
   _error?: string | null  // save error message
+  _version?: number       // incremented on each edit, used to detect concurrent edits
 }
 
 let localIdCounter = 0
@@ -17,7 +18,8 @@ function nextLocalId() {
 export function buildEmptyRow(defaults: Partial<TankerRow> = {}): TankerRow {
   return {
     _localId: nextLocalId(),
-    _dirty: true,
+    _dirty: false,   // not dirty until user actually edits — prevents spurious auto-saves
+    _version: 0,
     tankerNumber: '',
     entryDate: new Date().toISOString().split('T')[0],
     portId: '',
@@ -83,7 +85,7 @@ function recalculateRow(row: TankerRow, contractType: CalculationType): TankerRo
 
 function normalizeInitialRows(rows: TankerRow[]): TankerRow[] {
   return rows.map((r) =>
-    r._localId ? r : { ...r, _localId: nextLocalId(), _dirty: false },
+    r._localId ? r : { ...r, _localId: nextLocalId(), _dirty: false, _version: 0 },
   )
 }
 
@@ -106,7 +108,12 @@ export function useTankerGrid(
       setRows((prev) =>
         prev.map((row) => {
           if (row._localId !== localId) return row
-          const updated = { ...row, [key]: value, _dirty: true }
+          const updated = {
+            ...row,
+            [key]: value,
+            _dirty: true,
+            _version: ((row._version as number) ?? 0) + 1,
+          }
           // Recalculate if this is a trigger field
           return recalculateRow(updated, contractType)
         }),
@@ -125,11 +132,19 @@ export function useTankerGrid(
     )
   }, [])
 
-  const markSaved = useCallback((localId: string, serverId: string) => {
+  /**
+   * Mark a row as saved. Only clears _dirty if no new edits came in after the save started
+   * (detected by comparing the version that was sent vs the current version).
+   */
+  const markSaved = useCallback((localId: string, serverId: string, savedVersion: number) => {
     setRows((prev) =>
-      prev.map((r) =>
-        r._localId === localId ? { ...r, id: serverId, _dirty: false, _saving: false, _error: null } : r,
-      ),
+      prev.map((r) => {
+        if (r._localId !== localId) return r
+        const currentVersion = (r._version as number) ?? 0
+        // If _version changed since we started saving, the user made new edits — keep _dirty
+        const stillDirty = currentVersion !== savedVersion
+        return { ...r, id: serverId, _saving: false, _error: null, _dirty: stillDirty }
+      }),
     )
   }, [])
 
@@ -153,6 +168,9 @@ export function useTankerGrid(
           const colKey = columnKeys[focusedColumnIndex + i]
           if (colKey) row[colKey] = isNaN(Number(val)) ? val.trim() : Number(val)
         })
+        // Pasted rows are dirty immediately since they have real data
+        row._dirty = true
+        row._version = 1
         return recalculateRow(row, contractType)
       })
       setRows((prev) => [...prev, ...newRows])

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateLicenseDto } from './dto/create-license.dto'
 import { UpdateLicenseDto } from './dto/update-license.dto'
@@ -53,8 +53,16 @@ export class LicensesService {
     return this.prisma.license.update({ where: { id }, data })
   }
 
-  async deactivate(id: string) {
+  async delete(id: string) {
     await this.findOne(id)
-    return this.prisma.license.update({ where: { id }, data: { isActive: false } })
+    try {
+      await this.prisma.license.delete({ where: { id } })
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code
+      if (code === 'P2003' || code === 'P2014') {
+        throw new ConflictException('Cannot delete this license because it has linked tankers')
+      }
+      throw e
+    }
   }
 }

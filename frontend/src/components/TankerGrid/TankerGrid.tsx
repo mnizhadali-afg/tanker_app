@@ -85,14 +85,15 @@ export default function TankerGrid({
   const saveRow = useCallback(
     async (row: TankerRow) => {
       if (!row._dirty) return
+      const savedVersion = (row._version as number) ?? 0
       markSaving(row._localId, true)
       try {
         if (row.id) {
           const { data } = await api.patch(`/tankers/${row.id}`, row)
-          markSaved(row._localId, data.id)
+          markSaved(row._localId, data.id, savedVersion)
         } else {
           const { data } = await api.post(`/invoices/${invoiceId}/tankers`, { ...row, invoiceId })
-          markSaved(row._localId, data.id)
+          markSaved(row._localId, data.id, savedVersion)
         }
       } catch {
         markError(row._localId, t('errors.serverError'))
@@ -101,7 +102,7 @@ export default function TankerGrid({
     [invoiceId, markSaving, markSaved, markError, t],
   )
 
-  const scheduleRowSave = useRowDebounce(600)
+  const scheduleRowSave = useRowDebounce(800)
 
   // Auto-save dirty rows with per-row debounce
   useEffect(() => {
@@ -111,6 +112,16 @@ export default function TankerGrid({
       }
     })
   }, [rows, scheduleRowSave, saveRow])
+
+  // Explicit save: immediately save all dirty rows (bypasses debounce)
+  const [manualSaving, setManualSaving] = useState(false)
+  const handleSaveAll = useCallback(async () => {
+    const dirtyRows = rows.filter((r) => r._dirty && !r._saving)
+    if (dirtyRows.length === 0) return
+    setManualSaving(true)
+    await Promise.all(dirtyRows.map(saveRow))
+    setManualSaving(false)
+  }, [rows, saveRow])
 
   // When port changes, auto-derive producerId from port's producerId
   const handleCellChange = useCallback(
@@ -156,6 +167,9 @@ export default function TankerGrid({
 
   const totalDebtAfn = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
   const totalDebtUsd = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
+
+  const dirtyCount = rows.filter((r) => r._dirty && !r._saving).length
+  const savingCount = rows.filter((r) => r._saving).length
 
   // Build group spans for the header
   type GroupSpan = { group: string; labelKey: string; count: number; startIndex: number }
@@ -275,11 +289,32 @@ export default function TankerGrid({
           >
             + {t('app.add')} {t('tankers.title')}
           </button>
+
           <span className="text-xs text-gray-400">
             {t('tankers.title')}: {rows.length}
           </span>
-          {rows.some((r) => r._saving) && (
-            <span className="text-xs text-gray-400 animate-pulse">{t('app.loading')}</span>
+
+          {/* Save All button — shown when there are unsaved rows */}
+          {dirtyCount > 0 && (
+            <button
+              onClick={handleSaveAll}
+              disabled={manualSaving}
+              className="ms-auto text-sm bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white font-medium px-3 py-1 rounded-lg"
+            >
+              {manualSaving ? t('app.loading') : `${t('app.save')} (${dirtyCount})`}
+            </button>
+          )}
+
+          {/* Auto-save in-progress indicator */}
+          {savingCount > 0 && dirtyCount === 0 && (
+            <span className="ms-auto text-xs text-gray-400 animate-pulse">
+              {t('app.loading')}
+            </span>
+          )}
+
+          {/* Saved indicator */}
+          {savingCount === 0 && dirtyCount === 0 && rows.length > 0 && (
+            <span className="ms-auto text-xs text-green-600">✓ {t('app.save')}d</span>
           )}
         </div>
       )}

@@ -52,8 +52,16 @@ export class ContractsService {
     return this.prisma.contract.update({ where: { id }, data: dto })
   }
 
-  async deactivate(id: string) {
+  async delete(id: string) {
     await this.findOne(id)
-    return this.prisma.contract.update({ where: { id }, data: { isActive: false } })
+    try {
+      await this.prisma.contract.delete({ where: { id } })
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code
+      if (code === 'P2003' || code === 'P2014') {
+        throw new ConflictException('Cannot delete this contract because it has linked invoices')
+      }
+      throw e
+    }
   }
 }

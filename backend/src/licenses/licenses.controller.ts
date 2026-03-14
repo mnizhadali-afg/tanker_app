@@ -43,7 +43,7 @@ export class LicensesController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'accountant')
-  deactivate(@Param('id') id: string) {
-    return this.licensesService.deactivate(id)
+  delete(@Param('id') id: string) {
+    return this.licensesService.delete(id)
   }
 }
