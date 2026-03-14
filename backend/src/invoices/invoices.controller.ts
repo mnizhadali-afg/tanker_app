@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common'
 import { InvoicesService } from './invoices.service'
 import { CreateInvoiceDto } from './dto/create-invoice.dto'
 import { InvoiceFilterDto } from './dto/invoice-filter.dto'
@@ -42,5 +42,12 @@ export class InvoicesController {
   @Roles('admin', 'accountant')
   cancel(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.invoicesService.cancel(id, user.sub)
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'accountant')
+  delete(@Param('id') id: string) {
+    return this.invoicesService.delete(id)
   }
 }

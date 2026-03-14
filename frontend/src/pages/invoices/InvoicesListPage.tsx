@@ -27,6 +27,7 @@ export default function InvoicesListPage() {
   const [search, setSearch] = useState('');
   const [cancelTarget, setCancelTarget] = useState<Invoice | null>(null);
   const [canceling, setCanceling] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const fetchInvoices = () => {
     const params = statusFilter ? `?status=${statusFilter}` : '';
@@ -53,6 +54,18 @@ export default function InvoicesListPage() {
       setCancelTarget(null);
     } finally {
       setCanceling(false);
+    }
+  };
+
+  const handleDelete = async (inv: Invoice) => {
+    if (!confirm(t('app.confirm') + ': ' + inv.invoiceNumber + '?')) return;
+    setDeleteError('');
+    try {
+      await api.delete(`/invoices/${inv.id}`);
+      setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
     }
   };
 
@@ -115,12 +128,20 @@ export default function InvoicesListPage() {
             {t('app.edit')}
           </button>
           {r.status === 'draft' && (
-            <button
-              onClick={() => setCancelTarget(r)}
-              className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50"
-            >
-              {t('invoices.cancel')}
-            </button>
+            <>
+              <button
+                onClick={() => setCancelTarget(r)}
+                className="text-xs text-orange-600 hover:text-orange-800 font-medium px-2 py-1 rounded hover:bg-orange-50"
+              >
+                {t('invoices.cancel')}
+              </button>
+              <button
+                onClick={() => handleDelete(r)}
+                className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50"
+              >
+                {t('app.delete')}
+              </button>
+            </>
           )}
         </div>
       ),
@@ -140,6 +161,12 @@ export default function InvoicesListPage() {
           + {t('invoices.new')}
         </button>
       </div>
+
+      {deleteError && (
+        <p className='text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2'>
+          {deleteError}
+        </p>
+      )}
 
       {/* Status filter tags + search toolbar */}
       <div className='flex items-center justify-between gap-3'>
