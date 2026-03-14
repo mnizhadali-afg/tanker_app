@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
+import AccountDrawer from './AccountDrawer';
 import api from '../../lib/axios';
 
 interface Account {
@@ -20,6 +21,7 @@ export default function AccountsListPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const fetchAccounts = () => {
     const params = typeFilter ? `?type=${typeFilter}` : '';
@@ -155,9 +157,11 @@ export default function AccountsListPage() {
         columns={columns}
         rows={filtered}
         loading={loading}
-        onRowClick={(row) => navigate(`/accounts/${row.id}`)}
+        onRowClick={(row) => setSelectedId(row.id)}
         emptyMessage={t('app.search')}
       />
+
+      <AccountDrawer accountId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
