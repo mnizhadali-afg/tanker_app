@@ -113,7 +113,10 @@ export class AuthService {
       path: '/api/auth',
     })
 
-    return { accessToken }
+    return {
+      accessToken,
+      user: { id: stored.user.id, username: stored.user.username, role: stored.user.role },
+    }
   }
 
   async logout(refreshToken: string | undefined, res: any) {
