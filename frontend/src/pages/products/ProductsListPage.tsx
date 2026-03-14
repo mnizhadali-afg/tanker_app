@@ -85,7 +85,7 @@ export default function ProductsListPage() {
         </h1>
         <button
           onClick={() => navigate('/products/new')}
-          className='bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-lg'
+          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
         >
           + {t('products.new')}
         </button>

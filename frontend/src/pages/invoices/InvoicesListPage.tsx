@@ -95,7 +95,7 @@ export default function InvoicesListPage() {
         </h1>
         <button
           onClick={() => navigate('/invoices/new')}
-          className='bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-lg'
+          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
         >
           + {t('invoices.new')}
         </button>
@@ -110,7 +110,7 @@ export default function InvoicesListPage() {
               onClick={() => setStatusFilter(s)}
               className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                 statusFilter === s
-                  ? 'bg-primary-600 text-white border-primary-600'
+                  ? 'bg-gray-600 text-white border-gray-600'
                   : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
               }`}
             >
