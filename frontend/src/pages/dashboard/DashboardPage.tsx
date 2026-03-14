@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { formatDate, formatNumber } from '../../utils/formatting'
@@ -25,15 +25,103 @@ interface DashboardData {
   }>
 }
 
+function FilterDropdown({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const selected = options.find((o) => o.value === value)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium"
+      >
+        <span>{t('app.filter')}</span>
+        {value !== 'all' && (
+          <span className="bg-primary-100 text-primary-700 text-xs px-1.5 py-0.5 rounded-full">
+            {selected?.label}
+          </span>
+        )}
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-20 inset-e-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              className={`w-full text-start px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors ${
+                value === opt.value ? 'text-primary-600 font-medium' : 'text-gray-700'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const locale = i18n.language
   const [data, setData] = useState<DashboardData | null>(null)
+  const [invoiceFilter, setInvoiceFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState('all')
 
   useEffect(() => {
     api.get('/reports/dashboard').then((r) => setData(r.data)).catch(() => {})
   }, [])
+
+  const invoiceOptions = [
+    { value: 'all', label: t('app.all') },
+    { value: 'draft', label: t('invoices.statuses.draft') },
+    { value: 'final', label: t('invoices.statuses.final') },
+    { value: 'canceled', label: t('invoices.statuses.canceled') },
+  ]
+
+  const paymentOptions = [
+    { value: 'all', label: t('app.all') },
+    { value: 'payment_in', label: t('payments.types.payment_in') },
+    { value: 'payment_out', label: t('payments.types.payment_out') },
+    { value: 'exchange', label: t('payments.types.exchange') },
+  ]
+
+  const filteredInvoices = data?.recentInvoices.filter(
+    (inv) => invoiceFilter === 'all' || inv.status === invoiceFilter
+  ) ?? []
+
+  const filteredPayments = data?.recentPayments.filter(
+    (pmt) => paymentFilter === 'all' || pmt.type === paymentFilter
+  ) ?? []
 
   return (
     <div className="space-y-6">
@@ -59,15 +147,13 @@ export default function DashboardPage() {
       <div className="bg-white border border-gray-200 rounded-xl">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">{t('invoices.title')}</h2>
-          <button onClick={() => navigate('/invoices')} className="text-sm text-primary-600 hover:underline">
-            {t('app.filter')} →
-          </button>
+          <FilterDropdown options={invoiceOptions} value={invoiceFilter} onChange={setInvoiceFilter} />
         </div>
         <div className="divide-y divide-gray-50">
-          {data?.recentInvoices.length === 0 && (
+          {filteredInvoices.length === 0 && (
             <p className="px-5 py-4 text-sm text-gray-400 text-center">—</p>
           )}
-          {data?.recentInvoices.map((inv) => (
+          {filteredInvoices.map((inv) => (
             <button
               key={inv.id}
               onClick={() => navigate(`/invoices/${inv.id}`)}
@@ -88,15 +174,13 @@ export default function DashboardPage() {
       <div className="bg-white border border-gray-200 rounded-xl">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">{t('payments.title')}</h2>
-          <button onClick={() => navigate('/payments')} className="text-sm text-primary-600 hover:underline">
-            {t('app.filter')} →
-          </button>
+          <FilterDropdown options={paymentOptions} value={paymentFilter} onChange={setPaymentFilter} />
         </div>
         <div className="divide-y divide-gray-50">
-          {data?.recentPayments.length === 0 && (
+          {filteredPayments.length === 0 && (
             <p className="px-5 py-4 text-sm text-gray-400 text-center">—</p>
           )}
-          {data?.recentPayments.map((pmt) => (
+          {filteredPayments.map((pmt) => (
             <div key={pmt.id} className="flex items-center gap-4 px-5 py-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900">{t(`payments.types.${pmt.type}`)}</p>
