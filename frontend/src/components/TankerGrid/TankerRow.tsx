@@ -2,6 +2,7 @@ import React, { memo } from 'react'
 import TankerCell from './TankerCell'
 import type { ColumnDef } from './columnDefs'
 import type { TankerRow as TankerRowData } from './useTankerGrid'
+import type { SelectOption } from './TankerCell'
 
 interface Props {
   row: TankerRowData
@@ -9,6 +10,7 @@ interface Props {
   columns: ColumnDef[]
   contractDefaults: Partial<TankerRowData>
   readOnly: boolean
+  selectOptionsByKey: Record<string, SelectOption[]>
   onCellChange: (localId: string, key: string, value: unknown) => void
   onKeyDown: (e: React.KeyboardEvent, rowIndex: number, colIndex: number) => void
   onCellFocus: (colIndex: number) => void
@@ -21,6 +23,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
   columns,
   contractDefaults,
   readOnly,
+  selectOptionsByKey,
   onCellChange,
   onKeyDown,
   onCellFocus,
@@ -29,7 +32,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
   const rowClass = [
     'flex border-b border-gray-200',
     row._saving ? 'opacity-60' : '',
-    row._error ? 'bg-danger-50' : '',
+    row._error ? 'bg-red-50' : '',
   ].filter(Boolean).join(' ')
 
   return (
@@ -58,6 +61,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
               colIndex={colIndex}
               isOverride={isOverride}
               readOnly={readOnly || (col.readOnly ?? false)}
+              selectOptions={col.type === 'select' ? (selectOptionsByKey[col.key] ?? []) : undefined}
               onChange={(val) => onCellChange(row._localId, col.key, val)}
               onKeyDown={(e) => onKeyDown(e, rowIndex, colIndex)}
               onFocus={() => onCellFocus(colIndex)}
@@ -69,7 +73,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
       {/* Delete button */}
       {!readOnly && (
         <button
-          className="w-7 shrink-0 text-danger-400 hover:text-danger-600 text-sm flex items-center justify-center"
+          className="w-7 shrink-0 text-red-400 hover:text-red-600 text-sm flex items-center justify-center"
           onClick={() => onDelete(row._localId)}
           tabIndex={-1}
           aria-label="Delete row"
@@ -78,9 +82,9 @@ const TankerRowComponent = memo(function TankerRowComponent({
         </button>
       )}
 
-      {/* Save indicator */}
-      {row._saving && (
-        <span className="absolute start-0 top-0 bottom-0 w-0.5 bg-primary-400 animate-pulse" />
+      {/* Save error indicator */}
+      {row._error && (
+        <span className="absolute inset-e-0 top-0 bottom-0 w-0.5 bg-red-400" title={String(row._error)} />
       )}
     </div>
   )

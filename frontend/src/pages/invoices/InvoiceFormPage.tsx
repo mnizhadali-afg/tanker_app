@@ -21,7 +21,7 @@ export default function InvoiceFormPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/contracts').then((r) => setContracts(r.data))
+    api.get('/contracts?isActive=true').then((r) => setContracts(r.data))
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

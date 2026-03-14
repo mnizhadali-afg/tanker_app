@@ -8,6 +8,10 @@ import api from '../../lib/axios'
 interface CustomerBalance {
   id: string
   customer: { id: string; name: string }
+  totalDebtAfn: number
+  totalDebtUsd: number
+  paidAfn: number
+  paidUsd: number
   balanceAfn: number
   balanceUsd: number
   balanceCommodity: number
@@ -29,19 +33,39 @@ export default function CustomerBalanceReport() {
   const columns: Column<CustomerBalance>[] = [
     { key: 'customer', label: t('accounts.name'), render: (r) => r.customer.name },
     {
+      key: 'totalDebtAfn',
+      label: t('reports.totalDebt') + ' (' + t('currency.afn') + ')',
+      render: (r) => formatNumber(r.totalDebtAfn, locale),
+    },
+    {
+      key: 'paidAfn',
+      label: t('reports.totalPaid') + ' (' + t('currency.afn') + ')',
+      render: (r) => formatNumber(r.paidAfn, locale),
+    },
+    {
       key: 'balanceAfn',
       label: t('reports.balanceAfn'),
       render: (r) => (
-        <span className={r.balanceAfn > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+        <span className={Number(r.balanceAfn) > 0 ? 'text-red-600 font-bold' : 'text-green-600'}>
           {formatNumber(r.balanceAfn, locale)}
         </span>
       ),
     },
     {
+      key: 'totalDebtUsd',
+      label: t('reports.totalDebt') + ' (' + t('currency.usd') + ')',
+      render: (r) => formatNumber(r.totalDebtUsd, locale),
+    },
+    {
+      key: 'paidUsd',
+      label: t('reports.totalPaid') + ' (' + t('currency.usd') + ')',
+      render: (r) => formatNumber(r.paidUsd, locale),
+    },
+    {
       key: 'balanceUsd',
       label: t('reports.balanceUsd'),
       render: (r) => (
-        <span className={r.balanceUsd > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+        <span className={Number(r.balanceUsd) > 0 ? 'text-red-600 font-bold' : 'text-green-600'}>
           {formatNumber(r.balanceUsd, locale)}
         </span>
       ),

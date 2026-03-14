@@ -1,11 +1,16 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import TankerRowComponent from './TankerRow'
 import { useTankerGrid, type TankerRow } from './useTankerGrid'
 import { useKeyboardNav, usePasteHandler } from './useKeyboardNav'
 import { getVisibleColumns } from './columnDefs'
+import type { SelectOption } from './TankerCell'
 import api from '../../lib/axios'
 import type { CalculationType } from '@tanker/shared'
+
+interface Port { id: string; name: string; producerId: string }
+interface Producer { id: string; name: string }
+interface License { id: string; licenseNumber: string }
 
 interface Props {
   invoiceId: string
@@ -13,15 +18,30 @@ interface Props {
   contractDefaults: Partial<TankerRow>
   initialTankers: TankerRow[]
   readOnly?: boolean
+  onRowsChange?: (rows: TankerRow[]) => void
 }
 
-// Debounce helper
-function useDebounce<T extends (...args: unknown[]) => unknown>(fn: T, ms: number): T {
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  return useCallback((...args: unknown[]) => {
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => fn(...args), ms)
-  }, [fn, ms]) as T
+// Column groups for visual separators
+const GROUP_LABELS: Record<string, string> = {
+  shared: 'tankers.groups.shared',
+  'customer-afn': 'tankers.groups.customerAfn',
+  'producer-afn': 'tankers.groups.producerAfn',
+  'customer-usd': 'tankers.groups.customerUsd',
+  'producer-usd': 'tankers.groups.producerUsd',
+  'per-ton': 'tankers.groups.perTon',
+}
+
+// Per-row debounce timers: rowLocalId → timer handle
+function useRowDebounce(ms: number) {
+  const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  return useCallback((localId: string, fn: () => void) => {
+    const existing = timers.current.get(localId)
+    if (existing) clearTimeout(existing)
+    timers.current.set(localId, setTimeout(() => {
+      timers.current.delete(localId)
+      fn()
+    }, ms))
+  }, [ms])
 }
 
 export default function TankerGrid({
@@ -30,6 +50,7 @@ export default function TankerGrid({
   contractDefaults,
   initialTankers,
   readOnly = false,
+  onRowsChange,
 }: Props) {
   const { t } = useTranslation()
   const columns = getVisibleColumns(contractType, true)
@@ -38,22 +59,39 @@ export default function TankerGrid({
   const { rows, addRow, updateCell, removeRow, markSaving, markSaved, markError, pasteRows } =
     useTankerGrid(initialTankers, contractType, contractDefaults)
 
-  // Save a row to backend (debounced)
+  // Notify parent when rows change (for print sync)
+  useEffect(() => {
+    onRowsChange?.(rows)
+  }, [rows, onRowsChange])
+
+  // Load ports, producers, licenses for select dropdowns
+  const [ports, setPorts] = useState<Port[]>([])
+  const [producers, setProducers] = useState<Producer[]>([])
+  const [licenses, setLicenses] = useState<License[]>([])
+
+  useEffect(() => {
+    api.get('/ports?isActive=true').then((r) => setPorts(r.data)).catch(() => {})
+    api.get('/accounts?type=producer&isActive=true').then((r) => setProducers(r.data)).catch(() => {})
+    api.get('/licenses?isActive=true').then((r) => setLicenses(r.data)).catch(() => {})
+  }, [])
+
+  const selectOptionsByKey: Record<string, SelectOption[]> = {
+    portId: ports.map((p) => ({ value: p.id, label: p.name })),
+    producerId: producers.map((p) => ({ value: p.id, label: p.name })),
+    licenseId: licenses.map((l) => ({ value: l.id, label: l.licenseNumber })),
+  }
+
+  // Save a single row to backend
   const saveRow = useCallback(
     async (row: TankerRow) => {
       if (!row._dirty) return
       markSaving(row._localId, true)
       try {
         if (row.id) {
-          // Update existing
           const { data } = await api.patch(`/tankers/${row.id}`, row)
           markSaved(row._localId, data.id)
         } else {
-          // Create new
-          const { data } = await api.post(`/invoices/${invoiceId}/tankers`, {
-            ...row,
-            invoiceId,
-          })
+          const { data } = await api.post(`/invoices/${invoiceId}/tankers`, { ...row, invoiceId })
           markSaved(row._localId, data.id)
         }
       } catch {
@@ -63,20 +101,30 @@ export default function TankerGrid({
     [invoiceId, markSaving, markSaved, markError, t],
   )
 
-  const debouncedSave = useDebounce(saveRow as (...args: unknown[]) => unknown, 600)
+  const scheduleRowSave = useRowDebounce(600)
 
-  // Auto-save dirty rows
+  // Auto-save dirty rows with per-row debounce
   useEffect(() => {
     rows.forEach((row) => {
       if (row._dirty && !row._saving) {
-        (debouncedSave as (row: TankerRow) => void)(row)
+        scheduleRowSave(row._localId, () => saveRow(row))
       }
     })
-  }, [rows, debouncedSave])
+  }, [rows, scheduleRowSave, saveRow])
 
-  const handleAddRow = useCallback(() => {
-    addRow()
-  }, [addRow])
+  // When port changes, auto-derive producerId from port's producerId
+  const handleCellChange = useCallback(
+    (localId: string, key: string, value: unknown) => {
+      updateCell(localId, key, value)
+      if (key === 'portId') {
+        const port = ports.find((p) => p.id === value)
+        if (port) updateCell(localId, 'producerId', port.producerId)
+      }
+    },
+    [updateCell, ports],
+  )
+
+  const handleAddRow = useCallback(() => { addRow() }, [addRow])
 
   const { handleKeyDown } = useKeyboardNav({
     rowCount: rows.length,
@@ -88,7 +136,6 @@ export default function TankerGrid({
     pasteRows(tsv, colIndex, columnKeys)
   })
 
-  // Attach paste listener to grid container
   const gridRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = gridRef.current
@@ -101,25 +148,64 @@ export default function TankerGrid({
     async (localId: string) => {
       const row = rows.find((r) => r._localId === localId)
       if (!row) return
-      if (row.id) {
-        await api.delete(`/tankers/${row.id}`).catch(() => {})
-      }
+      if (row.id) await api.delete(`/tankers/${row.id}`).catch(() => {})
       removeRow(localId)
     },
     [rows, removeRow],
   )
 
-  // Compute total footer row
   const totalDebtAfn = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
   const totalDebtUsd = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
 
+  // Build group spans for the header
+  type GroupSpan = { group: string; labelKey: string; count: number; startIndex: number }
+  const groupSpans: GroupSpan[] = []
+  columns.forEach((col, i) => {
+    const g = col.group ?? ''
+    const last = groupSpans[groupSpans.length - 1]
+    if (last && last.group === g) {
+      last.count++
+    } else {
+      groupSpans.push({ group: g, labelKey: GROUP_LABELS[g] ?? '', count: 1, startIndex: i })
+    }
+  })
+
   return (
     <div className="flex flex-col border border-gray-200 rounded-lg overflow-hidden">
-      {/* ── Scrollable grid ─────────────────────────────────────────────── */}
       <div ref={gridRef} className="overflow-x-auto" role="grid" aria-label={t('tankers.title')}>
-        {/* Sticky header */}
-        <div className="flex bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-          <div className="w-8 shrink-0 border-e border-gray-200" /> {/* row number col */}
+
+        {/* Group header row */}
+        <div className="flex bg-gray-100 border-b border-gray-300 sticky top-0 z-20">
+          <div className="w-8 shrink-0" />
+          {groupSpans.map((span, i) => {
+            const totalWidth = columns
+              .slice(span.startIndex, span.startIndex + span.count)
+              .reduce((s, c) => s + (c.width ?? 90), 0)
+            const groupColors: Record<string, string> = {
+              shared: 'bg-blue-50 text-blue-700 border-blue-200',
+              'customer-afn': 'bg-green-50 text-green-700 border-green-200',
+              'producer-afn': 'bg-orange-50 text-orange-700 border-orange-200',
+              'customer-usd': 'bg-teal-50 text-teal-700 border-teal-200',
+              'producer-usd': 'bg-purple-50 text-purple-700 border-purple-200',
+              'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+            }
+            const colorClass = groupColors[span.group] ?? 'bg-gray-100 text-gray-500'
+            return (
+              <div
+                key={i}
+                className={`shrink-0 text-xs font-semibold text-center border-e border-gray-300 py-0.5 ${colorClass}`}
+                style={{ width: totalWidth }}
+              >
+                {span.labelKey ? t(span.labelKey) : ''}
+              </div>
+            )
+          })}
+          {!readOnly && <div className="w-7 shrink-0" />}
+        </div>
+
+        {/* Column header row */}
+        <div className="flex bg-gray-50 border-b border-gray-200 sticky top-5.5 z-10">
+          <div className="w-8 shrink-0 border-e border-gray-200" />
           {columns.map((col) => (
             <div
               key={col.key}
@@ -143,7 +229,8 @@ export default function TankerGrid({
               columns={columns}
               contractDefaults={contractDefaults}
               readOnly={readOnly}
-              onCellChange={updateCell}
+              selectOptionsByKey={selectOptionsByKey}
+              onCellChange={handleCellChange}
               onKeyDown={handleKeyDown}
               onCellFocus={handleCellFocus}
               onDelete={handleDelete}
@@ -179,7 +266,7 @@ export default function TankerGrid({
         )}
       </div>
 
-      {/* ── Toolbar ─────────────────────────────────────────────────────── */}
+      {/* Toolbar */}
       {!readOnly && (
         <div className="px-3 py-2 border-t border-gray-200 bg-white flex items-center gap-3">
           <button
@@ -191,6 +278,9 @@ export default function TankerGrid({
           <span className="text-xs text-gray-400">
             {t('tankers.title')}: {rows.length}
           </span>
+          {rows.some((r) => r._saving) && (
+            <span className="text-xs text-gray-400 animate-pulse">{t('app.loading')}</span>
+          )}
         </div>
       )}
     </div>

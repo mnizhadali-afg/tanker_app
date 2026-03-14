@@ -58,7 +58,14 @@ export class InvoicesService {
         createdBy: { select: { id: true, username: true } },
         finalizedBy: { select: { id: true, username: true } },
         canceledBy: { select: { id: true, username: true } },
-        tankers: { orderBy: { entryDate: 'asc' } },
+        tankers: {
+          orderBy: { entryDate: 'asc' },
+          include: {
+            port: { select: { id: true, name: true, producerId: true } },
+            producer: { select: { id: true, name: true } },
+            license: { select: { id: true, licenseNumber: true } },
+          },
+        },
       },
     })
     if (!invoice) throw new NotFoundException('Invoice not found')
@@ -71,9 +78,10 @@ export class InvoicesService {
     if (!customerId) {
       const contract = await this.prisma.contract.findUnique({
         where: { id: dto.contractId },
-        select: { customerId: true },
+        select: { customerId: true, isActive: true },
       })
       if (!contract) throw new NotFoundException('Contract not found')
+      if (!contract.isActive) throw new BadRequestException('Cannot create invoice for an inactive contract')
       customerId = contract.customerId
     }
 

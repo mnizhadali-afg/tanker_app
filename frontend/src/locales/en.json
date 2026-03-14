@@ -154,6 +154,14 @@
       "transport": "Transport",
       "commodityPercentDebt": "Commodity % Debt"
     },
+    "groups": {
+      "shared": "Shared Costs",
+      "customerAfn": "Customer (AFN)",
+      "producerAfn": "Producer (AFN)",
+      "customerUsd": "Customer (USD)",
+      "producerUsd": "Producer (USD)",
+      "perTon": "Per Ton"
+    },
     "ratePerTonAfn": "Rate/Ton (AFN)",
     "ratePerTonUsd": "Rate/Ton (USD)",
     "customerDebtAfn": "Customer Debt (AFN)",
@@ -175,7 +183,8 @@
     "levels": {
       "customer": "Customer",
       "contract": "Contract",
-      "invoice": "Invoice"
+      "invoice": "Invoice",
+      "account": "Between Accounts"
     },
     "amountAfn": "Amount (AFN)",
     "amountUsd": "Amount (USD)",

@@ -18,6 +18,7 @@ export const TANKER_COLUMNS: ColumnDef[] = [
   { key: 'tankerNumber',  labelKey: 'tankers.tankerNumber', type: 'text',   width: 110 },
   { key: 'entryDate',     labelKey: 'tankers.entryDate',    type: 'date',   width: 110, recalcTrigger: false },
   { key: 'portId',        labelKey: 'tankers.port',         type: 'select', width: 140 },
+  { key: 'producerId',    labelKey: 'tankers.producer',     type: 'select', width: 140 },
   { key: 'licenseId',     labelKey: 'tankers.license',      type: 'select', width: 140 },
 
   // ── Weight & exchange ─────────────────────────────────────────────────────

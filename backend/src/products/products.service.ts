@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
@@ -20,12 +20,18 @@ export class ProductsService {
     return product
   }
 
-  create(dto: CreateProductDto) {
+  async create(dto: CreateProductDto) {
+    const existing = await this.prisma.product.findUnique({ where: { name: dto.name } })
+    if (existing) throw new ConflictException(`Product name "${dto.name}" already exists`)
     return this.prisma.product.create({ data: { ...dto, isActive: dto.isActive ?? true } })
   }
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id)
+    if (dto.name) {
+      const existing = await this.prisma.product.findFirst({ where: { name: dto.name, NOT: { id } } })
+      if (existing) throw new ConflictException(`Product name "${dto.name}" already exists`)
+    }
     return this.prisma.product.update({ where: { id }, data: dto })
   }
 

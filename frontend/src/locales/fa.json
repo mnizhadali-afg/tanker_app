@@ -154,6 +154,14 @@
       "transport": "ترانسپورت",
       "commodityPercentDebt": "فیصدی جنسی"
     },
+    "groups": {
+      "shared": "هزینه‌های مشترک",
+      "customerAfn": "مشتری (افغانی)",
+      "producerAfn": "محصول‌کننده (افغانی)",
+      "customerUsd": "مشتری (دلار)",
+      "producerUsd": "محصول‌کننده (دلار)",
+      "perTon": "فی‌تن"
+    },
     "ratePerTonAfn": "نرخ فی‌تن (افغانی)",
     "ratePerTonUsd": "نرخ فی‌تن (دلار)",
     "customerDebtAfn": "بدهی مشتری (افغانی)",
@@ -175,7 +183,8 @@
     "levels": {
       "customer": "مشتری",
       "contract": "قرارداد",
-      "invoice": "فاکتور"
+      "invoice": "فاکتور",
+      "account": "بین حساب‌ها"
     },
     "amountAfn": "مبلغ (افغانی)",
     "amountUsd": "مبلغ (دلار)",

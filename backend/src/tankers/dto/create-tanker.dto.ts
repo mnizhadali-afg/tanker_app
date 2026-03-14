@@ -13,24 +13,29 @@ export class CreateTankerDto {
   @IsUUID()
   invoiceId: string
 
+  @IsOptional()
   @IsUUID()
-  contractId: string
+  contractId?: string
 
+  @IsOptional()
   @IsUUID()
-  portId: string
+  portId?: string
 
+  @IsOptional()
   @IsUUID()
-  producerId: string
+  producerId?: string
 
   @IsOptional()
   @IsUUID()
   licenseId?: string
 
+  @IsOptional()
   @IsString()
-  tankerNumber: string
+  tankerNumber?: string
 
+  @IsOptional()
   @IsDateString()
-  entryDate: string
+  entryDate?: string
 
   @IsNumber()
   @Min(0)

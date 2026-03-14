@@ -14,8 +14,8 @@ interface InvoiceStatus {
   issueDate: string
   totalDebtAfn: number
   totalDebtUsd: number
-  totalPaidAfn: number
-  totalPaidUsd: number
+  paidAfn: number    // field name from backend
+  paidUsd: number    // field name from backend
 }
 
 export default function InvoiceStatusReport() {
@@ -38,14 +38,36 @@ export default function InvoiceStatusReport() {
       label: t('invoices.status'),
       render: (r) => <StatusBadge status={r.status} label={t(`invoices.statuses.${r.status}`)} />,
     },
-    { key: 'totalDebtAfn', label: t('reports.totalDebt') + ' (' + t('currency.afn') + ')', render: (r) => formatNumber(r.totalDebtAfn, locale) },
-    { key: 'totalDebtUsd', label: t('reports.totalDebt') + ' (' + t('currency.usd') + ')', render: (r) => formatNumber(r.totalDebtUsd, locale) },
     {
-      key: 'outstanding',
-      label: t('reports.outstanding'),
+      key: 'totalDebtAfn',
+      label: t('reports.totalDebt') + ' (' + t('currency.afn') + ')',
+      render: (r) => formatNumber(r.totalDebtAfn, locale),
+    },
+    {
+      key: 'paidAfn',
+      label: t('reports.totalPaid') + ' (' + t('currency.afn') + ')',
+      render: (r) => formatNumber(r.paidAfn, locale),
+    },
+    {
+      key: 'outstandingAfn',
+      label: t('reports.outstanding') + ' (' + t('currency.afn') + ')',
       render: (r) => (
-        <span className={r.totalDebtAfn - r.totalPaidAfn > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-          {formatNumber(r.totalDebtAfn - r.totalPaidAfn, locale)}
+        <span className={Number(r.totalDebtAfn) - Number(r.paidAfn) > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+          {formatNumber(Number(r.totalDebtAfn) - Number(r.paidAfn), locale)}
+        </span>
+      ),
+    },
+    {
+      key: 'totalDebtUsd',
+      label: t('reports.totalDebt') + ' (' + t('currency.usd') + ')',
+      render: (r) => formatNumber(r.totalDebtUsd, locale),
+    },
+    {
+      key: 'outstandingUsd',
+      label: t('reports.outstanding') + ' (' + t('currency.usd') + ')',
+      render: (r) => (
+        <span className={Number(r.totalDebtUsd) - Number(r.paidUsd) > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+          {formatNumber(Number(r.totalDebtUsd) - Number(r.paidUsd), locale)}
         </span>
       ),
     },

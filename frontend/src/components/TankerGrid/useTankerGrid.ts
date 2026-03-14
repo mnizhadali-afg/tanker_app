@@ -81,12 +81,18 @@ function recalculateRow(row: TankerRow, contractType: CalculationType): TankerRo
   }
 }
 
+function normalizeInitialRows(rows: TankerRow[]): TankerRow[] {
+  return rows.map((r) =>
+    r._localId ? r : { ...r, _localId: nextLocalId(), _dirty: false },
+  )
+}
+
 export function useTankerGrid(
   initialRows: TankerRow[],
   contractType: CalculationType,
   contractDefaults: Partial<TankerRow>,
 ) {
-  const [rows, setRows] = useState<TankerRow[]>(initialRows)
+  const [rows, setRows] = useState<TankerRow[]>(() => normalizeInitialRows(initialRows))
 
   const addRow = useCallback(() => {
     const newRow = buildEmptyRow(contractDefaults)

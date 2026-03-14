@@ -30,7 +30,10 @@ export default function ProductFormPage() {
       if (isEdit) await api.patch(`/products/${id}`, { name, unit, notes, isActive })
       else await api.post('/products', { name, unit, notes })
       navigate('/products')
-    } catch { setError(t('errors.serverError')) } finally { setSaving(false) }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(typeof msg === 'string' ? msg : t('errors.serverError'))
+    } finally { setSaving(false) }
   }
 
   return (

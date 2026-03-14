@@ -25,8 +25,8 @@ export default function LicenseFormPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/products').then((r) => setProducts(r.data))
-    api.get('/accounts?type=producer').then((r) => setProducers(r.data))
+    api.get('/products?isActive=true').then((r) => setProducts(r.data))
+    api.get('/accounts?type=producer&isActive=true').then((r) => setProducers(r.data))
     if (isEdit) {
       api.get(`/licenses/${id}`).then((r) => {
         const l = r.data

@@ -8,7 +8,9 @@ import api from '../../lib/axios'
 interface Payment {
   id: string
   type: string
-  customer?: { name: string }
+  linkedLevel: string
+  payer?: { name: string }
+  payee?: { name: string }
   contract?: { code: string }
   invoice?: { invoiceNumber: string }
   amountAfn?: number
@@ -30,7 +32,9 @@ export default function PaymentsListPage() {
 
   const columns: Column<Payment>[] = [
     { key: 'type', label: t('payments.type'), render: (r) => t(`payments.types.${r.type}`) },
-    { key: 'customer', label: t('accounts.types.customer'), render: (r) => r.customer?.name ?? '—' },
+    { key: 'linkedLevel', label: t('payments.level'), render: (r) => t(`payments.levels.${r.linkedLevel}`) },
+    { key: 'payer', label: t('payments.payer'), render: (r) => r.payer?.name ?? '—' },
+    { key: 'payee', label: t('payments.payee'), render: (r) => r.payee?.name ?? '—' },
     { key: 'contract', label: t('contracts.code'), render: (r) => r.contract?.code ?? '—' },
     { key: 'invoice', label: t('invoices.invoiceNumber'), render: (r) => r.invoice?.invoiceNumber ?? '—' },
     { key: 'amountAfn', label: t('payments.amountAfn'), render: (r) => r.amountAfn ? formatNumber(r.amountAfn, locale) : '—' },

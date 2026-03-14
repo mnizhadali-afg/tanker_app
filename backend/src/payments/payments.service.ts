@@ -18,23 +18,34 @@ export class PaymentsService {
     if (dto.linkedLevel === 'contract' && !dto.contractId) {
       throw new BadRequestException('contractId is required when linkedLevel is contract')
     }
+    // account-level transactions do not require customerId
+    if ((dto.linkedLevel === 'customer' || dto.linkedLevel === 'contract' || dto.linkedLevel === 'invoice') && !dto.customerId) {
+      throw new BadRequestException('customerId is required for customer/contract/invoice level payments')
+    }
 
     return this.prisma.monetaryTransaction.create({
       data: {
         type: dto.type,
-        payerAccountId: dto.payerAccountId,
-        payeeAccountId: dto.payeeAccountId,
-        monetaryAccountId: dto.monetaryAccountId,
+        payerAccountId: dto.payerAccountId || null,
+        payeeAccountId: dto.payeeAccountId || null,
+        monetaryAccountId: dto.monetaryAccountId || null,
         linkedLevel: dto.linkedLevel,
-        customerId: dto.customerId,
-        contractId: dto.contractId,
-        invoiceId: dto.invoiceId,
+        customerId: dto.customerId || null,
+        contractId: dto.contractId || null,
+        invoiceId: dto.invoiceId || null,
         amountAfn: dto.amountAfn ? new Prisma.Decimal(dto.amountAfn) : new Prisma.Decimal(0),
         amountUsd: dto.amountUsd ? new Prisma.Decimal(dto.amountUsd) : new Prisma.Decimal(0),
         exchangeRate: dto.exchangeRate ? new Prisma.Decimal(dto.exchangeRate) : null,
         transactionDate: new Date(dto.transactionDate),
         notes: dto.notes,
         createdById: userId,
+      },
+      include: {
+        payer: { select: { id: true, name: true } },
+        payee: { select: { id: true, name: true } },
+        monetaryAccount: { select: { id: true, name: true } },
+        contract: { select: { id: true, code: true } },
+        invoice: { select: { id: true, invoiceNumber: true } },
       },
     })
   }
@@ -66,6 +77,8 @@ export class PaymentsService {
         payer: { select: { id: true, name: true } },
         payee: { select: { id: true, name: true } },
         monetaryAccount: { select: { id: true, name: true } },
+        contract: { select: { id: true, code: true } },
+        invoice: { select: { id: true, invoiceNumber: true } },
       },
       orderBy: { transactionDate: 'desc' },
     })

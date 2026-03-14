@@ -2,13 +2,19 @@ import React, { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from './columnDefs'
 
+export interface SelectOption {
+  value: string
+  label: string
+}
+
 interface Props {
   col: ColumnDef
   value: unknown
   rowIndex: number
   colIndex: number
-  isOverride: boolean       // differs from contract default
+  isOverride: boolean
   readOnly: boolean
+  selectOptions?: SelectOption[]   // for col.type === 'select'
   onChange: (value: unknown) => void
   onKeyDown: (e: React.KeyboardEvent) => void
   onFocus: () => void
@@ -21,6 +27,7 @@ const TankerCell = memo(function TankerCell({
   colIndex,
   isOverride,
   readOnly,
+  selectOptions,
   onChange,
   onKeyDown,
   onFocus,
@@ -42,17 +49,36 @@ const TankerCell = memo(function TankerCell({
   }
 
   if (col.type === 'select') {
-    // Dropdowns are handled by parent via a select overlay — render as readonly display for now
+    if (readOnly) {
+      const label = selectOptions?.find((o) => o.value === value)?.label ?? String(value ?? '—')
+      return (
+        <div
+          {...dataAttrs}
+          tabIndex={0}
+          className={`${baseClass} flex items-center truncate`}
+          onKeyDown={onKeyDown}
+          onFocus={onFocus}
+        >
+          {label}
+        </div>
+      )
+    }
     return (
-      <div
+      <select
         {...dataAttrs}
-        tabIndex={0}
-        className={`${baseClass} flex items-center truncate`}
+        value={String(value ?? '')}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         onFocus={onFocus}
+        className={baseClass}
       >
-        {String(value ?? '')}
-      </div>
+        <option value="">—</option>
+        {(selectOptions ?? []).map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     )
   }
 

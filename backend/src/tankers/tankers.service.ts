@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { InvoicesService } from '../invoices/invoices.service'
@@ -55,6 +55,12 @@ function buildCostsFromDto(dto: CreateTankerDto | UpdateTankerDto, existing?: Re
   }
 }
 
+const TANKER_INCLUDE = {
+  port: { select: { id: true, name: true, producerId: true } },
+  producer: { select: { id: true, name: true } },
+  license: { select: { id: true, licenseNumber: true } },
+}
+
 @Injectable()
 export class TankersService {
   constructor(
@@ -65,12 +71,16 @@ export class TankersService {
   findByInvoice(invoiceId: string) {
     return this.prisma.tanker.findMany({
       where: { invoiceId },
+      include: TANKER_INCLUDE,
       orderBy: { entryDate: 'asc' },
     })
   }
 
   async findOne(id: string) {
-    const tanker = await this.prisma.tanker.findUnique({ where: { id } })
+    const tanker = await this.prisma.tanker.findUnique({
+      where: { id },
+      include: TANKER_INCLUDE,
+    })
     if (!tanker) throw new NotFoundException('Tanker not found')
     return tanker
   }
@@ -79,6 +89,16 @@ export class TankersService {
     const invoice = await this.invoicesService.findOne(dto.invoiceId)
     this.invoicesService.assertEditable(invoice)
 
+    // Derive contractId from the invoice if not provided
+    const contractId = dto.contractId || invoice.contract.id
+
+    // Derive producerId from the port if not provided
+    let producerId = dto.producerId
+    if (!producerId && dto.portId) {
+      const port = await this.prisma.port.findUnique({ where: { id: dto.portId } })
+      if (port) producerId = port.producerId
+    }
+
     const contractType = invoice.contract.calculationType as ContractCalcType
     const costs = buildCostsFromDto(dto)
     const calc = calculateTanker(costs, contractType as CalculationType)
@@ -86,16 +106,16 @@ export class TankersService {
     return this.prisma.tanker.create({
       data: {
         invoiceId: dto.invoiceId,
-        contractId: dto.contractId,
-        portId: dto.portId,
-        producerId: dto.producerId,
-        licenseId: dto.licenseId,
-        tankerNumber: dto.tankerNumber,
-        entryDate: new Date(dto.entryDate),
-        productWeight: new Prisma.Decimal(dto.productWeight),
-        billWeight: new Prisma.Decimal(dto.billWeight),
+        contractId,
+        portId: dto.portId ?? '',
+        producerId: producerId ?? '',
+        licenseId: dto.licenseId || null,
+        tankerNumber: dto.tankerNumber ?? '',
+        entryDate: new Date(dto.entryDate ?? new Date()),
+        productWeight: new Prisma.Decimal(dto.productWeight ?? 0),
+        billWeight: new Prisma.Decimal(dto.billWeight ?? 0),
         tonnageBasis: dto.tonnageBasis ?? 'product_weight',
-        exchangeRate: new Prisma.Decimal(dto.exchangeRate),
+        exchangeRate: new Prisma.Decimal(dto.exchangeRate ?? 0),
         costProduct: new Prisma.Decimal(dto.costProduct ?? 0),
         costPublicBenefits: new Prisma.Decimal(dto.costPublicBenefits ?? 0),
         costFmn60: new Prisma.Decimal(dto.costFmn60 ?? 0),
@@ -135,6 +155,7 @@ export class TankersService {
         producerReceivableAfn: calc.producerReceivableAfn,
         producerReceivableUsd: calc.producerReceivableUsd,
       },
+      include: TANKER_INCLUDE,
     })
   }
 
@@ -149,7 +170,16 @@ export class TankersService {
     const calc = calculateTanker(costs, contractType as CalculationType)
 
     const updateData: Record<string, unknown> = { ...dto }
+
+    // If portId changed and producerId not provided, re-derive producerId from port
+    if (dto.portId && !dto.producerId) {
+      const port = await this.prisma.port.findUnique({ where: { id: dto.portId } })
+      if (port) updateData.producerId = port.producerId
+    }
+
     if (dto.entryDate) updateData.entryDate = new Date(dto.entryDate)
+    if (dto.licenseId === '') updateData.licenseId = null
+
     // Override calculated fields
     updateData.customerDebtAfn = calc.customerDebtAfn
     updateData.customerDebtUsd = calc.customerDebtUsd
@@ -157,7 +187,11 @@ export class TankersService {
     updateData.producerReceivableAfn = calc.producerReceivableAfn
     updateData.producerReceivableUsd = calc.producerReceivableUsd
 
-    return this.prisma.tanker.update({ where: { id }, data: updateData })
+    return this.prisma.tanker.update({
+      where: { id },
+      data: updateData,
+      include: TANKER_INCLUDE,
+    })
   }
 
   async remove(id: string) {
@@ -168,7 +202,6 @@ export class TankersService {
   }
 
   async bulkCreate(invoiceId: string, dtos: CreateTankerDto[]) {
-    // Validate invoice editable once
     const invoice = await this.invoicesService.findOne(invoiceId)
     this.invoicesService.assertEditable(invoice)
 

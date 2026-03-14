@@ -20,7 +20,7 @@ export default function PortFormPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/accounts?type=producer').then((r) => setProducers(r.data))
+    api.get('/accounts?type=producer&isActive=true').then((r) => setProducers(r.data))
     if (isEdit) {
       api.get(`/ports/${id}`).then((r) => {
         setName(r.data.name); setProducerId(r.data.producerId); setNotes(r.data.notes ?? ''); setIsActive(r.data.isActive)

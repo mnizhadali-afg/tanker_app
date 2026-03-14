@@ -32,8 +32,8 @@ export default function ContractFormPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/accounts?type=customer').then((r) => setCustomers(r.data))
-    api.get('/products').then((r) => setProducts(r.data))
+    api.get('/accounts?type=customer&isActive=true').then((r) => setCustomers(r.data))
+    api.get('/products?isActive=true').then((r) => setProducts(r.data))
     if (isEdit) {
       api.get(`/contracts/${id}`).then((r) => {
         const c = r.data
@@ -73,7 +73,10 @@ export default function ContractFormPage() {
       if (isEdit) await api.patch(`/contracts/${id}`, { ...payload, isActive })
       else await api.post('/contracts', payload)
       navigate('/contracts')
-    } catch { setError(t('errors.serverError')) } finally { setSaving(false) }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(typeof msg === 'string' ? msg : t('errors.serverError'))
+    } finally { setSaving(false) }
   }
 
   return (

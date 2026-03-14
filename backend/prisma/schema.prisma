@@ -50,6 +50,7 @@ enum PaymentLevel {
   customer
   contract
   invoice
+  account
 }
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -125,6 +126,7 @@ model Product {
   contracts             Contract[]
   commodityTransactions CommodityTransaction[]
 
+  @@unique([name])
   @@map("products")
 }
 

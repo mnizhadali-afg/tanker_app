@@ -13,9 +13,17 @@ export default function ProductsListPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchProducts = () => {
     api.get('/products').then((r) => setProducts(r.data)).finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { fetchProducts() }, [])
+
+  const handleDeactivate = async (product: Product) => {
+    if (!confirm(t('app.confirm') + ': ' + product.name + '?')) return
+    await api.delete(`/products/${product.id}`)
+    fetchProducts()
+  }
 
   const columns: Column<Product>[] = [
     { key: 'name', label: t('products.name') },
@@ -29,9 +37,22 @@ export default function ProductsListPage() {
       key: 'actions',
       label: t('app.actions'),
       render: (r) => (
-        <button className="text-xs text-primary-600 hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/products/${r.id}/edit`) }}>
-          {t('app.edit')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="text-xs text-primary-600 hover:underline"
+            onClick={(e) => { e.stopPropagation(); navigate(`/products/${r.id}/edit`) }}
+          >
+            {t('app.edit')}
+          </button>
+          {r.isActive && (
+            <button
+              className="text-xs text-red-500 hover:underline"
+              onClick={(e) => { e.stopPropagation(); handleDeactivate(r) }}
+            >
+              {t('app.delete')}
+            </button>
+          )}
+        </div>
       ),
     },
   ]

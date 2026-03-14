@@ -21,20 +21,24 @@ export default function AccountsListPage() {
   const [loading, setLoading] = useState(true)
   const [typeFilter, setTypeFilter] = useState('')
 
-  useEffect(() => {
+  const fetchAccounts = () => {
     const params = typeFilter ? `?type=${typeFilter}` : ''
     api.get(`/accounts${params}`)
       .then((r) => setAccounts(r.data))
       .finally(() => setLoading(false))
-  }, [typeFilter])
+  }
+
+  useEffect(() => { fetchAccounts() }, [typeFilter])
+
+  const handleDeactivate = async (account: Account) => {
+    if (!confirm(t('app.confirm') + ': ' + account.name + '?')) return
+    await api.delete(`/accounts/${account.id}`)
+    fetchAccounts()
+  }
 
   const columns: Column<Account>[] = [
     { key: 'name', label: t('accounts.name') },
-    {
-      key: 'type',
-      label: t('accounts.type'),
-      render: (row) => t(`accounts.types.${row.type}`),
-    },
+    { key: 'type', label: t('accounts.type'), render: (row) => t(`accounts.types.${row.type}`) },
     { key: 'phone', label: t('accounts.phone') },
     {
       key: 'isActive',
@@ -50,12 +54,22 @@ export default function AccountsListPage() {
       key: 'actions',
       label: t('app.actions'),
       render: (row) => (
-        <button
-          className="text-xs text-primary-600 hover:underline"
-          onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${row.id}/edit`) }}
-        >
-          {t('app.edit')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="text-xs text-primary-600 hover:underline"
+            onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${row.id}/edit`) }}
+          >
+            {t('app.edit')}
+          </button>
+          {row.isActive && (
+            <button
+              className="text-xs text-red-500 hover:underline"
+              onClick={(e) => { e.stopPropagation(); handleDeactivate(row) }}
+            >
+              {t('app.delete')}
+            </button>
+          )}
+        </div>
       ),
     },
   ]
