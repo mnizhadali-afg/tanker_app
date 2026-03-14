@@ -35,8 +35,16 @@ export class ProductsService {
     return this.prisma.product.update({ where: { id }, data: dto })
   }
 
-  async deactivate(id: string) {
+  async delete(id: string) {
     await this.findOne(id)
-    return this.prisma.product.update({ where: { id }, data: { isActive: false } })
+    try {
+      await this.prisma.product.delete({ where: { id } })
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code
+      if (code === 'P2003' || code === 'P2014') {
+        throw new ConflictException('Cannot delete this product because it has linked contracts or licenses')
+      }
+      throw e
+    }
   }
 }

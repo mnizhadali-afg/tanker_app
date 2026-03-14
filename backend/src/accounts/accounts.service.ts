@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { AccountType } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateAccountDto } from './dto/create-account.dto'
@@ -33,8 +33,16 @@ export class AccountsService {
     return this.prisma.account.update({ where: { id }, data: dto })
   }
 
-  async deactivate(id: string) {
+  async delete(id: string) {
     await this.findOne(id)
-    return this.prisma.account.update({ where: { id }, data: { isActive: false } })
+    try {
+      await this.prisma.account.delete({ where: { id } })
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code
+      if (code === 'P2003' || code === 'P2014') {
+        throw new ConflictException('Cannot delete this account because it has linked contracts, invoices, or payments')
+      }
+      throw e
+    }
   }
 }

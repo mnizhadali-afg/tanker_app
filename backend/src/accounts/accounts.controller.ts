@@ -40,7 +40,7 @@ export class AccountsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'accountant')
-  deactivate(@Param('id') id: string) {
-    return this.accountsService.deactivate(id)
+  delete(@Param('id') id: string) {
+    return this.accountsService.delete(id)
   }
 }

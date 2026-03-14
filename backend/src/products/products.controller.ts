@@ -39,7 +39,7 @@ export class ProductsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'accountant')
-  deactivate(@Param('id') id: string) {
-    return this.productsService.deactivate(id)
+  delete(@Param('id') id: string) {
+    return this.productsService.delete(id)
   }
 }
