@@ -3,6 +3,8 @@
     "title": "Tanker Accounting System",
     "loading": "Loading...",
     "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",

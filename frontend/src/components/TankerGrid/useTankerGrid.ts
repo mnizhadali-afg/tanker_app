@@ -83,10 +83,18 @@ function recalculateRow(row: TankerRow, contractType: CalculationType): TankerRo
   }
 }
 
+function normalizeDate(val: unknown): string {
+  if (!val) return new Date().toISOString().split('T')[0]
+  const s = String(val)
+  // Backend returns ISO timestamp like '2026-03-12T00:00:00.000Z' — extract date part
+  return s.includes('T') ? s.split('T')[0] : s
+}
+
 function normalizeInitialRows(rows: TankerRow[]): TankerRow[] {
-  return rows.map((r) =>
-    r._localId ? r : { ...r, _localId: nextLocalId(), _dirty: false, _version: 0 },
-  )
+  return rows.map((r) => {
+    const base = r._localId ? r : { ...r, _localId: nextLocalId(), _dirty: false, _version: 0 }
+    return { ...base, entryDate: normalizeDate(base.entryDate) }
+  })
 }
 
 export function useTankerGrid(
@@ -112,6 +120,7 @@ export function useTankerGrid(
             ...row,
             [key]: value,
             _dirty: true,
+            _error: null,  // clear any previous save error so auto-save can retry
             _version: ((row._version as number) ?? 0) + 1,
           }
           // Recalculate if this is a trigger field
@@ -179,5 +188,27 @@ export function useTankerGrid(
     [contractType, contractDefaults],
   )
 
-  return { rows, addRow, updateCell, removeRow, markSaving, markSaved, markError, pasteRows }
+  /**
+   * Update multiple cells on a row in a single state update (avoids multiple re-renders/debounces).
+   */
+  const updateCells = useCallback(
+    (localId: string, updates: Record<string, unknown>) => {
+      setRows((prev) =>
+        prev.map((row) => {
+          if (row._localId !== localId) return row
+          const updated = {
+            ...row,
+            ...updates,
+            _dirty: true,
+            _error: null,
+            _version: ((row._version as number) ?? 0) + 1,
+          }
+          return recalculateRow(updated, contractType)
+        }),
+      )
+    },
+    [contractType],
+  )
+
+  return { rows, addRow, updateCell, updateCells, removeRow, markSaving, markSaved, markError, pasteRows }
 }

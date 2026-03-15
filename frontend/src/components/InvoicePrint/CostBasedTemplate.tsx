@@ -70,7 +70,7 @@ export default function CostBasedTemplate({ invoice }: Props) {
         </thead>
         <tbody>
           {invoice.tankers.map((tanker, i) => (
-            <tr key={tanker.id}>
+            <tr key={tanker.id || (tanker._localId as string) || i}>
               <td>{i + 1}</td>
               <td>{tanker.tankerNumber}</td>
               <td>{formatDate(tanker.entryDate as string, locale)}</td>

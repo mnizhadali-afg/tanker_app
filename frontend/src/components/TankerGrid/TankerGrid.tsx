@@ -8,6 +8,85 @@ import type { SelectOption } from './TankerCell'
 import api from '../../lib/axios'
 import type { CalculationType } from '@tanker/shared'
 
+// Explicit whitelist of every field accepted by CreateTankerDto / UpdateTankerDto.
+// Anything NOT in this set is stripped before sending to the backend.
+// This is safer than a blacklist — it handles nested objects (port/producer/license),
+// internal _* fields, calculated outputs, and unknown otherDefaultCosts keys automatically.
+const DTO_FIELDS: Record<string, 'uuid' | 'number' | 'string' | 'date' | 'enum'> = {
+  portId:         'uuid',
+  producerId:     'uuid',
+  licenseId:      'uuid',
+  tankerNumber:   'string',
+  entryDate:      'date',
+  productWeight:  'number',
+  billWeight:     'number',
+  tonnageBasis:   'enum',
+  exchangeRate:   'number',
+  costProduct:                    'number',
+  costPublicBenefits:             'number',
+  costFmn60:                      'number',
+  costFmn20:                      'number',
+  costQualityControl:             'number',
+  costDozbalagh_customer:         'number',
+  costDozbalagh_producer:         'number',
+  costEscort_customer:            'number',
+  costEscort_producer:            'number',
+  costBascule_customer:           'number',
+  costBascule_producer:           'number',
+  costOvernight_customer:         'number',
+  costOvernight_producer:         'number',
+  costBankCommission_customer:    'number',
+  costBankCommission_producer:    'number',
+  costRentAfn_customer:           'number',
+  costRentAfn_producer:           'number',
+  costMiscAfn_customer:           'number',
+  costMiscAfn_producer:           'number',
+  costBrokerCommission_customer:  'number',
+  costBrokerCommission_producer:  'number',
+  costExchangerCommission_customer: 'number',
+  costExchangerCommission_producer: 'number',
+  costLicenseCommission_customer: 'number',
+  costLicenseCommission_producer: 'number',
+  costRentUsd_customer:           'number',
+  costRentUsd_producer:           'number',
+  costMiscUsd_customer:           'number',
+  costMiscUsd_producer:           'number',
+  transportCost:          'number',
+  commodityPercentDebt:   'number',
+  ratePerTonAfn:          'number',
+  ratePerTonUsd:          'number',
+}
+
+// Required in CreateTankerDto (no @IsOptional) — must always be present with a valid value
+const REQUIRED_NUMBERS = new Set(['productWeight', 'billWeight', 'exchangeRate'])
+
+function toApiPayload(row: TankerRow): Record<string, unknown> {
+  const payload: Record<string, unknown> = {}
+  for (const [k, type] of Object.entries(DTO_FIELDS)) {
+    const v = (row as Record<string, unknown>)[k]
+    if (type === 'uuid') {
+      // Omit UUID fields that are empty/null — @IsUUID() rejects empty strings
+      if (v && v !== '') payload[k] = v
+    } else if (type === 'number') {
+      // Coerce null/undefined to 0 for required fields; skip for optional ones
+      if (v === null || v === undefined) {
+        if (REQUIRED_NUMBERS.has(k)) payload[k] = 0
+        // else omit — @IsOptional() accepts missing field
+      } else {
+        payload[k] = Number(v)
+      }
+    } else {
+      // string, date, enum — include only if not null/undefined
+      if (v !== null && v !== undefined) payload[k] = v
+    }
+  }
+  // Ensure all required numeric fields are always present
+  for (const f of REQUIRED_NUMBERS) {
+    if (!(f in payload)) payload[f] = 0
+  }
+  return payload
+}
+
 interface Port { id: string; name: string; producerId: string }
 interface Producer { id: string; name: string }
 interface License { id: string; licenseNumber: string }
@@ -56,7 +135,7 @@ export default function TankerGrid({
   const columns = getVisibleColumns(contractType, true)
   const columnKeys = columns.map((c) => c.key)
 
-  const { rows, addRow, updateCell, removeRow, markSaving, markSaved, markError, pasteRows } =
+  const { rows, addRow, updateCell, updateCells, removeRow, markSaving, markSaved, markError, pasteRows } =
     useTankerGrid(initialTankers, contractType, contractDefaults)
 
   // Notify parent when rows change (for print sync)
@@ -88,14 +167,17 @@ export default function TankerGrid({
       const savedVersion = (row._version as number) ?? 0
       markSaving(row._localId, true)
       try {
+        const payload = toApiPayload(row)
         if (row.id) {
-          const { data } = await api.patch(`/tankers/${row.id}`, row)
+          const { data } = await api.patch(`/tankers/${row.id}`, payload)
           markSaved(row._localId, data.id, savedVersion)
         } else {
-          const { data } = await api.post(`/invoices/${invoiceId}/tankers`, { ...row, invoiceId })
+          const { data } = await api.post(`/invoices/${invoiceId}/tankers`, { ...payload, invoiceId })
           markSaved(row._localId, data.id, savedVersion)
         }
-      } catch {
+      } catch (err: unknown) {
+        const errData = (err as { response?: { data?: unknown } })?.response?.data
+        console.error('[TankerGrid] Save failed — server response:', errData)
         markError(row._localId, t('errors.serverError'))
       }
     },
@@ -104,35 +186,39 @@ export default function TankerGrid({
 
   const scheduleRowSave = useRowDebounce(800)
 
-  // Auto-save dirty rows with per-row debounce
+  // Auto-save dirty rows with per-row debounce.
+  // Rules:
+  //   - Skip rows with _error (prevents infinite retry loop on 500; user must edit again to retry)
+  //   - Skip rows missing portId — it's a non-nullable FK in the DB; saving without it always 500s
   useEffect(() => {
     rows.forEach((row) => {
-      if (row._dirty && !row._saving) {
+      const portId = (row as Record<string, unknown>).portId
+      const readyToSave = row._dirty && !row._saving && !row._error && portId && portId !== ''
+      if (readyToSave) {
         scheduleRowSave(row._localId, () => saveRow(row))
       }
     })
   }, [rows, scheduleRowSave, saveRow])
 
-  // Explicit save: immediately save all dirty rows (bypasses debounce)
-  const [manualSaving, setManualSaving] = useState(false)
-  const handleSaveAll = useCallback(async () => {
-    const dirtyRows = rows.filter((r) => r._dirty && !r._saving)
-    if (dirtyRows.length === 0) return
-    setManualSaving(true)
-    await Promise.all(dirtyRows.map(saveRow))
-    setManualSaving(false)
-  }, [rows, saveRow])
 
-  // When port changes, auto-derive producerId from port's producerId
+  // When port changes, auto-derive producerId and store the full port object in one batch update.
+  // The port object (port.name) is needed by print templates; it is stripped from API payloads.
   const handleCellChange = useCallback(
     (localId: string, key: string, value: unknown) => {
-      updateCell(localId, key, value)
       if (key === 'portId') {
         const port = ports.find((p) => p.id === value)
-        if (port) updateCell(localId, 'producerId', port.producerId)
+        updateCells(localId, {
+          portId: value,
+          producerId: port?.producerId ?? '',
+          // Store resolved objects so print templates can access port.name / producer.name
+          port: port ? { id: port.id, name: port.name } : undefined,
+          producer: port ? { id: port.producerId, name: producers.find(p => p.id === port.producerId)?.name ?? '' } : undefined,
+        })
+      } else {
+        updateCell(localId, key, value)
       }
     },
-    [updateCell, ports],
+    [updateCell, updateCells, ports, producers],
   )
 
   const handleAddRow = useCallback(() => { addRow() }, [addRow])
@@ -168,8 +254,8 @@ export default function TankerGrid({
   const totalDebtAfn = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
   const totalDebtUsd = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
 
-  const dirtyCount = rows.filter((r) => r._dirty && !r._saving).length
   const savingCount = rows.filter((r) => r._saving).length
+  const dirtyCount = rows.filter((r) => r._dirty && !r._saving).length
 
   // Build group spans for the header
   type GroupSpan = { group: string; labelKey: string; count: number; startIndex: number }
@@ -294,28 +380,15 @@ export default function TankerGrid({
             {t('tankers.title')}: {rows.length}
           </span>
 
-          {/* Save All button — shown when there are unsaved rows */}
-          {dirtyCount > 0 && (
-            <button
-              onClick={handleSaveAll}
-              disabled={manualSaving}
-              className="ms-auto text-sm bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white font-medium px-3 py-1 rounded-lg"
-            >
-              {manualSaving ? t('app.loading') : `${t('app.save')} (${dirtyCount})`}
-            </button>
-          )}
-
-          {/* Auto-save in-progress indicator */}
-          {savingCount > 0 && dirtyCount === 0 && (
-            <span className="ms-auto text-xs text-gray-400 animate-pulse">
-              {t('app.loading')}
-            </span>
-          )}
-
-          {/* Saved indicator */}
-          {savingCount === 0 && dirtyCount === 0 && rows.length > 0 && (
-            <span className="ms-auto text-xs text-green-600">✓ {t('app.save')}d</span>
-          )}
+              {/* Right-side auto-save status — one indicator at a time */}
+          <div className="ms-auto flex items-center">
+            {savingCount > 0 && (
+              <span className="text-xs text-gray-400 animate-pulse">{t('app.saving')}</span>
+            )}
+            {savingCount === 0 && dirtyCount === 0 && rows.length > 0 && (
+              <span className="text-xs text-green-600">✓ {t('app.saved')}</span>
+            )}
+          </div>
         </div>
       )}
     </div>

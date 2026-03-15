@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { InvoicesService } from '../invoices/invoices.service'
@@ -99,6 +99,9 @@ export class TankersService {
       if (port) producerId = port.producerId
     }
 
+    if (!dto.portId) throw new BadRequestException('portId is required')
+    if (!producerId) throw new BadRequestException('producerId could not be resolved — select a port with an associated producer')
+
     const contractType = invoice.contract.calculationType as ContractCalcType
     const costs = buildCostsFromDto(dto)
     const calc = calculateTanker(costs, contractType as CalculationType)
@@ -107,8 +110,8 @@ export class TankersService {
       data: {
         invoiceId: dto.invoiceId,
         contractId,
-        portId: dto.portId ?? '',
-        producerId: producerId ?? '',
+        portId: dto.portId,
+        producerId,
         licenseId: dto.licenseId || null,
         tankerNumber: dto.tankerNumber ?? '',
         entryDate: new Date(dto.entryDate ?? new Date()),
