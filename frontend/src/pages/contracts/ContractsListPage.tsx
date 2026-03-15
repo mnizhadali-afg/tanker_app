@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
 import DetailModal from '../../components/shared/DetailModal';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import ContractFormPage from './ContractFormPage';
 import api from '../../lib/axios';
 
@@ -22,6 +23,8 @@ export default function ContractsListPage() {
   const [deleteError, setDeleteError] = useState('');
   const [detailRow, setDetailRow] = useState<Contract | null>(null);
   const [invoiceCount, setInvoiceCount] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Contract | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchContracts = () => {
@@ -38,17 +41,19 @@ export default function ContractsListPage() {
     });
   }, [detailRow?.id]);
 
-  const handleDelete = async (contract: Contract) => {
-    if (!confirm(t('app.confirm') + ': ' + contract.code + '?')) return;
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     setDeleteError('');
-    setDetailRow(null);
     try {
-      await api.delete(`/contracts/${contract.id}`);
-      setContracts((prev) => prev.filter((c) => c.id !== contract.id));
+      await api.delete(`/contracts/${pendingDelete.id}`);
+      setContracts((prev) => prev.filter((c) => c.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       setDeleteError(status === 409 ? t('contracts.deleteBlockedByInvoices') : t('errors.serverError'));
-    }
+      setPendingDelete(null);
+    } finally { setDeleting(false); }
   };
 
   const q = search.trim().toLowerCase();
@@ -116,7 +121,7 @@ export default function ContractsListPage() {
                 )}
               </div>
               <button
-                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                onClick={() => { setDetailRow(null); setPendingDelete(detailRow); }}
                 disabled={invoiceCount === null || invoiceCount > 0}
                 title={invoiceCount !== null && invoiceCount > 0 ? t('contracts.deleteBlockedByInvoices') : undefined}
                 className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent'
@@ -131,6 +136,18 @@ export default function ContractsListPage() {
               </button>
             </>
           }
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={t('app.delete')}
+          message={t('app.deleteConfirmMsg')}
+          itemName={pendingDelete.code}
+          confirmLabel={t('app.delete')}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setPendingDelete(null)}
         />
       )}
 

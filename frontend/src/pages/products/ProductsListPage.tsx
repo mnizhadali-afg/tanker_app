@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import DataTable, { type Column } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
 import DetailModal from '../../components/shared/DetailModal'
+import ConfirmDialog from '../../components/shared/ConfirmDialog'
 import ProductFormPage from './ProductFormPage'
 import api from '../../lib/axios'
 
@@ -15,6 +16,8 @@ export default function ProductsListPage() {
   const [search, setSearch] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [detailRow, setDetailRow] = useState<Product | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [modalId, setModalId] = useState<string | null | 'new'>(null)
 
   const fetchProducts = () => {
@@ -23,17 +26,19 @@ export default function ProductsListPage() {
 
   useEffect(() => { fetchProducts() }, [])
 
-  const handleDelete = async (product: Product) => {
-    if (!confirm(t('app.confirm') + ': ' + product.name + '?')) return
+  const handleDelete = async () => {
+    if (!pendingDelete) return
+    setDeleting(true)
     setDeleteError('')
-    setDetailRow(null)
     try {
-      await api.delete(`/products/${product.id}`)
-      setProducts((prev) => prev.filter((p) => p.id !== product.id))
+      await api.delete(`/products/${pendingDelete.id}`)
+      setProducts((prev) => prev.filter((p) => p.id !== pendingDelete.id))
+      setPendingDelete(null)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'))
-    }
+      setPendingDelete(null)
+    } finally { setDeleting(false) }
   }
 
   const q = search.trim().toLowerCase()
@@ -89,7 +94,7 @@ export default function ProductsListPage() {
           actions={
             <>
               <button
-                onClick={() => { setDetailRow(null); handleDelete(detailRow) }}
+                onClick={() => { setDetailRow(null); setPendingDelete(detailRow) }}
                 className="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
               >
                 {t('app.delete')}
@@ -102,6 +107,18 @@ export default function ProductsListPage() {
               </button>
             </>
           }
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={t('app.delete')}
+          message={t('app.deleteConfirmMsg')}
+          itemName={pendingDelete.name}
+          confirmLabel={t('app.delete')}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setPendingDelete(null)}
         />
       )}
 

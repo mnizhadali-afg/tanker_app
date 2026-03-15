@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
 import Modal from '../../components/shared/Modal';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import InvoiceFormPage from './InvoiceFormPage';
 import { formatDate, formatNumber } from '../../utils/formatting';
 import api from '../../lib/axios';
@@ -165,51 +166,6 @@ function InvoiceDetailModal({
               </button>
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Confirm Dialog ────────────────────────────────────────────────────────────
-function ConfirmDialog({
-  title,
-  message,
-  confirmLabel,
-  confirmClass,
-  loading,
-  onConfirm,
-  onCancel,
-}: {
-  title: string;
-  message: React.ReactNode;
-  confirmLabel: string;
-  confirmClass: string;
-  loading: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
-        <h2 className="text-base font-semibold text-gray-900 mb-2">{title}</h2>
-        <p className="text-sm text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            disabled={loading}
-            className="text-sm px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-          >
-            {t('app.cancel')}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className={`text-sm px-4 py-2 text-white rounded-lg disabled:opacity-60 ${confirmClass}`}
-          >
-            {loading ? t('app.loading') : confirmLabel}
-          </button>
         </div>
       </div>
     </div>
@@ -483,14 +439,10 @@ export default function InvoicesListPage() {
       {finalizeTarget && (
         <ConfirmDialog
           title={t('invoices.finalize')}
-          message={
-            <>
-              {t('invoices.finalizeConfirm')}{' '}
-              <span className="font-medium">{finalizeTarget.invoiceNumber}</span>
-            </>
-          }
+          message={t('invoices.finalizeConfirm')}
+          itemName={finalizeTarget.invoiceNumber}
           confirmLabel={t('invoices.finalize')}
-          confirmClass="bg-green-600 hover:bg-green-700"
+          variant="success"
           loading={actionLoading}
           onConfirm={handleFinalize}
           onCancel={() => setFinalizeTarget(null)}
@@ -501,14 +453,10 @@ export default function InvoicesListPage() {
       {cancelTarget && (
         <ConfirmDialog
           title={t('invoices.cancel')}
-          message={
-            <>
-              {t('invoices.cancelConfirm')}{' '}
-              <span className="font-medium">{cancelTarget.invoiceNumber}</span>?
-            </>
-          }
+          message={t('invoices.cancelConfirm')}
+          itemName={cancelTarget.invoiceNumber}
           confirmLabel={t('invoices.cancel')}
-          confirmClass="bg-orange-500 hover:bg-orange-600"
+          variant="warning"
           loading={actionLoading}
           onConfirm={handleCancel}
           onCancel={() => setCancelTarget(null)}
@@ -519,14 +467,10 @@ export default function InvoicesListPage() {
       {deleteTarget && (
         <ConfirmDialog
           title={t('app.delete')}
-          message={
-            <>
-              {t('invoices.deleteConfirm')}{' '}
-              <span className="font-medium">{deleteTarget.invoiceNumber}</span>?
-            </>
-          }
+          message={t('invoices.deleteConfirm')}
+          itemName={deleteTarget.invoiceNumber}
           confirmLabel={t('app.delete')}
-          confirmClass="bg-red-600 hover:bg-red-700"
+          variant="danger"
           loading={actionLoading}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}

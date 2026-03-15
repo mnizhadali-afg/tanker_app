@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
 import DetailModal from '../../components/shared/DetailModal';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import LicenseFormPage from './LicenseFormPage';
 import { formatDate } from '../../utils/formatting';
 import api from '../../lib/axios';
@@ -24,6 +25,8 @@ export default function LicensesListPage() {
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [detailRow, setDetailRow] = useState<License | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<License | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchLicenses = () => {
@@ -32,17 +35,19 @@ export default function LicensesListPage() {
 
   useEffect(() => { fetchLicenses(); }, []);
 
-  const handleDelete = async (license: License) => {
-    if (!confirm(t('app.confirm') + ': ' + license.licenseNumber + '?')) return;
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     setDeleteError('');
-    setDetailRow(null);
     try {
-      await api.delete(`/licenses/${license.id}`);
-      setLicenses((prev) => prev.filter((l) => l.id !== license.id));
+      await api.delete(`/licenses/${pendingDelete.id}`);
+      setLicenses((prev) => prev.filter((l) => l.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
-    }
+      setPendingDelete(null);
+    } finally { setDeleting(false); }
   };
 
   const q = search.trim().toLowerCase();
@@ -101,7 +106,7 @@ export default function LicensesListPage() {
           actions={
             <>
               <button
-                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                onClick={() => { setDetailRow(null); setPendingDelete(detailRow); }}
                 className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
               >
                 {t('app.delete')}
@@ -114,6 +119,18 @@ export default function LicensesListPage() {
               </button>
             </>
           }
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={t('app.delete')}
+          message={t('app.deleteConfirmMsg')}
+          itemName={pendingDelete.licenseNumber}
+          confirmLabel={t('app.delete')}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setPendingDelete(null)}
         />
       )}
 

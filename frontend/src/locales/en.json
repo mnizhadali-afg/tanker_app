@@ -31,7 +31,8 @@
     "new": "New",
     "processing": "Processing…",
     "showing": "Showing",
-    "of": "of"
+    "of": "of",
+    "deleteConfirmMsg": "Are you sure you want to delete this item? This action cannot be undone."
   },
   "auth": {
     "login": "Login",
@@ -119,7 +120,7 @@
     "status": "Status",
     "finalize": "Finalize",
     "cancel": "Cancel Invoice",
-    "finalizeConfirm": "Are you sure you want to finalize this invoice? It cannot be edited after finalization.",
+    "finalizeConfirm": "Once finalized, this invoice cannot be edited. Are you sure?",
     "cancelConfirm": "Are you sure you want to cancel this invoice?",
     "statuses": {
       "draft": "Draft",
@@ -128,7 +129,7 @@
     },
     "totalAfn": "Total (AFN)",
     "totalUsd": "Total (USD)",
-    "deleteConfirm": "Are you sure you want to permanently delete invoice"
+    "deleteConfirm": "Are you sure you want to permanently delete this invoice? This action cannot be undone."
   },
   "tankers": {
     "title": "Tankers",

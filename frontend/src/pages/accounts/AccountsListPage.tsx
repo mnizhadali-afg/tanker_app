@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import AccountDrawer from './AccountDrawer';
 import Modal from '../../components/shared/Modal';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import AccountFormPage from './AccountFormPage';
 import api from '../../lib/axios';
 
@@ -22,6 +23,8 @@ export default function AccountsListPage() {
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Account | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchAccounts = () => {
@@ -36,17 +39,19 @@ export default function AccountsListPage() {
     fetchAccounts();
   }, [typeFilter]);
 
-  const handleDelete = async (account: Account) => {
-    if (!confirm(t('app.confirm') + ': ' + account.name + '?')) return;
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     setDeleteError('');
     try {
-      await api.delete(`/accounts/${account.id}`);
-      setAccounts((prev) => prev.filter((a) => a.id !== account.id));
+      await api.delete(`/accounts/${pendingDelete.id}`);
+      setAccounts((prev) => prev.filter((a) => a.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message;
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
-    }
+      setPendingDelete(null);
+    } finally { setDeleting(false); }
   };
 
   const q = search.trim().toLowerCase();
@@ -83,7 +88,7 @@ export default function AccountsListPage() {
             className='text-xs text-red-500 hover:underline'
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete(row);
+              setPendingDelete(row);
             }}
           >
             {t('app.delete')}
@@ -163,6 +168,18 @@ export default function AccountsListPage() {
         totalCount={accounts.length}
         label={t('nav.accounts')}
       />
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={t('app.delete')}
+          message={t('app.deleteConfirmMsg')}
+          itemName={pendingDelete.name}
+          confirmLabel={t('app.delete')}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
 
       <AccountDrawer
         accountId={selectedId}

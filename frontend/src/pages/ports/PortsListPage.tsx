@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
 import DetailModal from '../../components/shared/DetailModal';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PortFormPage from './PortFormPage';
 import api from '../../lib/axios';
 
@@ -19,6 +20,8 @@ export default function PortsListPage() {
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [detailRow, setDetailRow] = useState<Port | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Port | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchPorts = () => {
@@ -27,17 +30,19 @@ export default function PortsListPage() {
 
   useEffect(() => { fetchPorts(); }, []);
 
-  const handleDelete = async (port: Port) => {
-    if (!confirm(t('app.confirm') + ': ' + port.name + '?')) return;
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     setDeleteError('');
-    setDetailRow(null);
     try {
-      await api.delete(`/ports/${port.id}`);
-      setPorts((prev) => prev.filter((p) => p.id !== port.id));
+      await api.delete(`/ports/${pendingDelete.id}`);
+      setPorts((prev) => prev.filter((p) => p.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
-    }
+      setPendingDelete(null);
+    } finally { setDeleting(false); }
   };
 
   const q = search.trim().toLowerCase();
@@ -90,7 +95,7 @@ export default function PortsListPage() {
           actions={
             <>
               <button
-                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                onClick={() => { setDetailRow(null); setPendingDelete(detailRow); }}
                 className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
               >
                 {t('app.delete')}
@@ -103,6 +108,18 @@ export default function PortsListPage() {
               </button>
             </>
           }
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={t('app.delete')}
+          message={t('app.deleteConfirmMsg')}
+          itemName={pendingDelete.name}
+          confirmLabel={t('app.delete')}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setPendingDelete(null)}
         />
       )}
 
