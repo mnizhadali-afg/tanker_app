@@ -216,6 +216,7 @@
     "exchangeRate": "Exchange Rate",
     "transactionDate": "Transaction Date",
     "monetaryAccount": "Monetary Account",
+    "specifyMonetaryAccount": "Specify monetary account",
     "payer": "Payer",
     "payee": "Payee"
   },

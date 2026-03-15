@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Patch, Delete, Body, Query, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common'
 import { PaymentsService } from './payments.service'
 import { CreateMonetaryTransactionDto } from './dto/create-monetary-transaction.dto'
+import { UpdateMonetaryTransactionDto } from './dto/update-monetary-transaction.dto'
 import { CreateCommodityTransactionDto } from './dto/create-commodity-transaction.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -41,6 +42,21 @@ export class PaymentsController {
   @Roles('admin', 'accountant', 'data_entry')
   createMonetary(@Body() dto: CreateMonetaryTransactionDto, @CurrentUser() user: JwtPayload) {
     return this.paymentsService.createMonetary(dto, user.sub)
+  }
+
+  @Patch('monetary/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'accountant')
+  updateMonetary(@Param('id') id: string, @Body() dto: UpdateMonetaryTransactionDto) {
+    return this.paymentsService.updateMonetary(id, dto)
+  }
+
+  @Delete('monetary/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'accountant')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMonetary(@Param('id') id: string) {
+    return this.paymentsService.deleteMonetary(id)
   }
 
   @Post('commodity')
