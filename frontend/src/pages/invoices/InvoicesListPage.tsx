@@ -23,6 +23,8 @@ function InvoiceDetailModal({
   locale,
   onClose,
   onEdit,
+  onView,
+  onPrint,
   onFinalize,
   onCancel,
   onDelete,
@@ -31,11 +33,20 @@ function InvoiceDetailModal({
   locale: string;
   onClose: () => void;
   onEdit: () => void;
+  onView: () => void;
+  onPrint: () => void;
   onFinalize: () => void;
   onCancel: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   return (
     <div
@@ -43,7 +54,7 @@ function InvoiceDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4 space-y-4"
+        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg mx-4 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -54,7 +65,7 @@ function InvoiceDetailModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none mt-0.5"
+            className="text-gray-400 hover:text-gray-600 text-3xl leading-none mt-0.5 cursor-pointer w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
           >
             ×
           </button>
@@ -94,47 +105,64 @@ function InvoiceDetailModal({
           </p>
         )}
 
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-          {invoice.status === 'draft' ? (
+        {/* Action buttons — left: navigation, right: state-changing */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+          {/* Left zone: Edit / View / Print */}
+          <div className="flex items-center gap-2">
+            {invoice.status === 'draft' && (
+              <button
+                onClick={onEdit}
+                className="text-sm px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
+              >
+                {t('app.edit')}
+              </button>
+            )}
             <button
-              onClick={onEdit}
-              className="text-sm px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-            >
-              {t('app.edit')}
-            </button>
-          ) : (
-            <button
-              onClick={onEdit}
-              className="text-sm px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              onClick={onView}
+              className="text-sm px-3 py-1.5 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-50 cursor-pointer"
             >
               {t('app.view')}
             </button>
-          )}
-
-          {invoice.status === 'draft' && (
-            <>
+            {invoice.status === 'final' && (
               <button
-                onClick={onFinalize}
-                className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                onClick={onPrint}
+                className="text-sm px-3 py-1.5 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-1.5 cursor-pointer"
               >
-                {t('invoices.finalize')}
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6v-8z" />
+                </svg>
+                {t('app.print')}
               </button>
-              <button
-                onClick={onCancel}
-                className="text-sm px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-              >
-                {t('invoices.cancel')}
-              </button>
-            </>
-          )}
+            )}
+          </div>
 
-          <button
-            onClick={onDelete}
-            className="text-sm px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 ms-auto"
-          >
-            {t('app.delete')}
-          </button>
+          {/* Right zone: Finalize | Cancel | Delete */}
+          {invoice.status !== 'final' && (
+            <div className="flex items-center divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+              {invoice.status === 'draft' && (
+                <>
+                  <button
+                    onClick={onFinalize}
+                    className="text-sm px-3 py-1.5 text-green-600 hover:bg-green-50 cursor-pointer"
+                  >
+                    {t('invoices.finalize')}
+                  </button>
+                  <button
+                    onClick={onCancel}
+                    className="text-sm px-3 py-1.5 text-orange-500 hover:bg-orange-50 cursor-pointer"
+                  >
+                    {t('invoices.cancel')}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={onDelete}
+                className="text-sm px-3 py-1.5 text-red-600 hover:bg-red-50 cursor-pointer"
+              >
+                {t('app.delete')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -409,6 +437,14 @@ export default function InvoicesListPage() {
           locale={locale}
           onClose={() => setDetailInvoice(null)}
           onEdit={() => {
+            setDetailInvoice(null);
+            navigate(`/invoices/${detailInvoice.id}`);
+          }}
+          onView={() => {
+            setDetailInvoice(null);
+            navigate(`/invoices/${detailInvoice.id}`);
+          }}
+          onPrint={() => {
             setDetailInvoice(null);
             navigate(`/invoices/${detailInvoice.id}`);
           }}
