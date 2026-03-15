@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatNumber } from '../../utils/formatting';
@@ -32,6 +33,7 @@ interface Props {
 
 export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const locale = i18n.language;
 
   const [account, setAccount] = useState<AccountDetail | null>(null);
