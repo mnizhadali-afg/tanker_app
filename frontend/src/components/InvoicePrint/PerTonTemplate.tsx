@@ -65,7 +65,7 @@ export default function PerTonTemplate({ invoice }: Props) {
             const effectiveTonnage =
               tanker.tonnageBasis === 'bill_weight' ? tanker.billWeight : tanker.productWeight
             return (
-              <tr key={tanker.id || (tanker._localId as string) || i}>
+              <tr key={tanker.id || String(i)}>
                 <td>{i + 1}</td>
                 <td>{tanker.tankerNumber}</td>
                 <td>{formatDate(tanker.entryDate, locale)}</td>

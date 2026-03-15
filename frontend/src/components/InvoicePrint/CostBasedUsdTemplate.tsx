@@ -67,7 +67,7 @@ export default function CostBasedUsdTemplate({ invoice }: Props) {
         </thead>
         <tbody>
           {invoice.tankers.map((tanker, i) => (
-            <tr key={tanker.id || (tanker._localId as string) || i}>
+            <tr key={tanker.id || String(i)}>
               <td>{i + 1}</td>
               <td>{tanker.tankerNumber}</td>
               <td>{formatDate(tanker.entryDate as string, locale)}</td>
