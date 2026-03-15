@@ -21,6 +21,7 @@ export default function ContractsListPage() {
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [detailRow, setDetailRow] = useState<Contract | null>(null);
+  const [invoiceCount, setInvoiceCount] = useState<number | null>(null);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchContracts = () => {
@@ -28,6 +29,14 @@ export default function ContractsListPage() {
   };
 
   useEffect(() => { fetchContracts(); }, []);
+
+  useEffect(() => {
+    if (!detailRow) { setInvoiceCount(null); return; }
+    setInvoiceCount(null);
+    api.get(`/contracts/${detailRow.id}`).then((r) => {
+      setInvoiceCount(r.data._count?.invoices ?? 0);
+    });
+  }, [detailRow?.id]);
 
   const handleDelete = async (contract: Contract) => {
     if (!confirm(t('app.confirm') + ': ' + contract.code + '?')) return;
@@ -37,8 +46,8 @@ export default function ContractsListPage() {
       await api.delete(`/contracts/${contract.id}`);
       setContracts((prev) => prev.filter((c) => c.id !== contract.id));
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      setDeleteError(status === 409 ? t('contracts.deleteBlockedByInvoices') : t('errors.serverError'));
     }
   };
 
@@ -91,13 +100,26 @@ export default function ContractsListPage() {
             { label: t('contracts.calculationType'), value: t(`contracts.calculationTypes.${detailRow.calculationType}`) },
             { label: t('contracts.customer'), value: detailRow.customer.name },
             { label: t('contracts.product'), value: detailRow.product.name },
+            {
+              label: t('contracts.linkedInvoices'),
+              value: invoiceCount === null
+                ? <span className="text-gray-400 text-xs">{t('app.loading')}</span>
+                : <span className={invoiceCount > 0 ? 'text-amber-600 font-semibold' : 'text-gray-800'}>{invoiceCount}</span>,
+            },
           ]}
           onClose={() => setDetailRow(null)}
           actions={
             <>
+              <div className="flex-1 flex items-center">
+                {invoiceCount !== null && invoiceCount > 0 && (
+                  <p className="text-xs text-amber-600">{t('contracts.deleteBlockedByInvoices')}</p>
+                )}
+              </div>
               <button
                 onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
-                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
+                disabled={invoiceCount === null || invoiceCount > 0}
+                title={invoiceCount !== null && invoiceCount > 0 ? t('contracts.deleteBlockedByInvoices') : undefined}
+                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent'
               >
                 {t('app.delete')}
               </button>

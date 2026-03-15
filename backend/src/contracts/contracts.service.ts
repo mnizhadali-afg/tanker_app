@@ -27,6 +27,7 @@ export class ContractsService {
       include: {
         customer: { select: { id: true, name: true } },
         product: { select: { id: true, name: true } },
+        _count: { select: { invoices: true } },
       },
     })
     if (!contract) throw new NotFoundException('Contract not found')

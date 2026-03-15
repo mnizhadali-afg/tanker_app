@@ -105,7 +105,9 @@
       "cost_based": "هزینه‌ای (افغانی)",
       "cost_based_usd": "هزینه‌ای (دلار)",
       "per_ton": "فی‌تن"
-    }
+    },
+    "linkedInvoices": "فاکتورهای مرتبط",
+    "deleteBlockedByInvoices": "این قرارداد دارای فاکتور مرتبط است و قابل حذف نیست"
   },
   "invoices": {
     "title": "فاکتورها",

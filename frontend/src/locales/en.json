@@ -105,7 +105,9 @@
       "cost_based": "Cost-Based (AFN)",
       "cost_based_usd": "Cost-Based (USD)",
       "per_ton": "Per Ton"
-    }
+    },
+    "linkedInvoices": "Linked Invoices",
+    "deleteBlockedByInvoices": "This contract has linked invoices and cannot be deleted"
   },
   "invoices": {
     "title": "Invoices",
