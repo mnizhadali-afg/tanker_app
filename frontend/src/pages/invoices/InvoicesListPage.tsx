@@ -432,6 +432,8 @@ export default function InvoicesListPage() {
         loading={loading}
         emptyMessage={t('app.noItems')}
         onRowClick={(row) => setDetailInvoice(row)}
+        totalCount={invoices.length}
+        label={t('nav.invoices')}
       />
 
       {/* New Invoice Modal */}

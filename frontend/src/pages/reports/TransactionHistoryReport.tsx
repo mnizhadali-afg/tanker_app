@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import DataTable, { type Column } from '../../components/shared/DataTable'
+import DetailModal from '../../components/shared/DetailModal'
 import { formatDate, formatNumber } from '../../utils/formatting'
 import api from '../../lib/axios'
 
@@ -25,6 +26,7 @@ export default function TransactionHistoryReport() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [search, setSearch] = useState('')
+  const [detailRow, setDetailRow] = useState<Transaction | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -42,7 +44,6 @@ export default function TransactionHistoryReport() {
     { key: 'amountAfn', label: t('payments.amountAfn'), render: (r) => r.amountAfn ? formatNumber(r.amountAfn, locale) : '—' },
     { key: 'amountUsd', label: t('payments.amountUsd'), render: (r) => r.amountUsd ? formatNumber(r.amountUsd, locale) : '—' },
     { key: 'transactionDate', label: t('payments.transactionDate'), render: (r) => formatDate(r.transactionDate, locale) },
-    { key: 'notes', label: t('app.notes'), render: (r) => r.notes ?? '—' },
   ]
 
   const q = search.trim().toLowerCase()
@@ -69,7 +70,7 @@ export default function TransactionHistoryReport() {
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
           {(dateFrom || dateTo) && (
-            <button onClick={() => { setDateFrom(''); setDateTo('') }} className="text-sm text-gray-500 hover:text-gray-700 pb-0.5">
+            <button onClick={() => { setDateFrom(''); setDateTo('') }} className="text-sm text-gray-500 hover:text-gray-700 pb-0.5 cursor-pointer">
               × {t('app.cancel')}
             </button>
           )}
@@ -88,7 +89,30 @@ export default function TransactionHistoryReport() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} />
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        loading={loading}
+        onRowClick={(r) => setDetailRow(r)}
+        totalCount={rows.length}
+        label={t('nav.payments')}
+      />
+
+      {detailRow && (
+        <DetailModal
+          title={t(`payments.types.${detailRow.type}`)}
+          fields={[
+            { label: t('payments.transactionDate'), value: formatDate(detailRow.transactionDate, locale) },
+            { label: t('accounts.types.customer'), value: detailRow.customer?.name },
+            { label: t('payments.amountAfn'), value: detailRow.amountAfn ? formatNumber(detailRow.amountAfn, locale) + ' ' + t('currency.afn') : undefined },
+            { label: t('payments.amountUsd'), value: detailRow.amountUsd ? formatNumber(detailRow.amountUsd, locale) + ' ' + t('currency.usd') : undefined },
+            ...(detailRow.contract ? [{ label: t('contracts.code'), value: detailRow.contract.code }] : []),
+            ...(detailRow.invoice ? [{ label: t('invoices.invoiceNumber'), value: detailRow.invoice.invoiceNumber }] : []),
+            ...(detailRow.notes ? [{ label: t('app.notes'), value: detailRow.notes, wide: true }] : []),
+          ]}
+          onClose={() => setDetailRow(null)}
+        />
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Account { id: string; name: string; type: string }
 interface Contract { id: string; code: string; customerId: string }
@@ -114,17 +115,21 @@ export default function PaymentFormPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.payer')}</label>
-            <select value={payerAccountId} onChange={(e) => setPayerAccountId(e.target.value)} className={inputClass}>
-              <option value="">— {t('payments.payer')} —</option>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name} ({t(`accounts.types.${a.type}`)})</option>)}
-            </select>
+            <SearchableSelect
+              options={accounts.map((a) => ({ value: a.id, label: `${a.name} (${t(`accounts.types.${a.type}`)})` }))}
+              value={payerAccountId}
+              onChange={setPayerAccountId}
+              placeholder={`— ${t('payments.payer')} —`}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.payee')}</label>
-            <select value={payeeAccountId} onChange={(e) => setPayeeAccountId(e.target.value)} className={inputClass}>
-              <option value="">— {t('payments.payee')} —</option>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name} ({t(`accounts.types.${a.type}`)})</option>)}
-            </select>
+            <SearchableSelect
+              options={accounts.map((a) => ({ value: a.id, label: `${a.name} (${t(`accounts.types.${a.type}`)})` }))}
+              value={payeeAccountId}
+              onChange={setPayeeAccountId}
+              placeholder={`— ${t('payments.payee')} —`}
+            />
           </div>
         </div>
 
@@ -132,39 +137,48 @@ export default function PaymentFormPage() {
         {!isAccountLevel && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('accounts.types.customer')}</label>
-            <select value={customerId} onChange={(e) => { setCustomerId(e.target.value); setContractId(''); setInvoiceId('') }} required className={inputClass}>
-              <option value="">— {t('accounts.types.customer')} —</option>
-              {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <SearchableSelect
+              options={customers.map((c) => ({ value: c.id, label: c.name }))}
+              value={customerId}
+              onChange={(v) => { setCustomerId(v); setContractId(''); setInvoiceId('') }}
+              placeholder={`— ${t('accounts.types.customer')} —`}
+              required
+            />
           </div>
         )}
 
         {(level === 'contract' || level === 'invoice') && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.contract')}</label>
-            <select value={contractId} onChange={(e) => { setContractId(e.target.value); setInvoiceId('') }} className={inputClass}>
-              <option value="">— {t('invoices.contract')} —</option>
-              {contracts.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-            </select>
+            <SearchableSelect
+              options={contracts.map((c) => ({ value: c.id, label: c.code }))}
+              value={contractId}
+              onChange={(v) => { setContractId(v); setInvoiceId('') }}
+              placeholder={`— ${t('invoices.contract')} —`}
+            />
           </div>
         )}
 
         {level === 'invoice' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.title')}</label>
-            <select value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} className={inputClass}>
-              <option value="">— {t('invoices.title')} —</option>
-              {invoices.map((inv) => <option key={inv.id} value={inv.id}>{inv.invoiceNumber}</option>)}
-            </select>
+            <SearchableSelect
+              options={invoices.map((inv) => ({ value: inv.id, label: inv.invoiceNumber }))}
+              value={invoiceId}
+              onChange={setInvoiceId}
+              placeholder={`— ${t('invoices.title')} —`}
+            />
           </div>
         )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.monetaryAccount')}</label>
-          <select value={monetaryAccountId} onChange={(e) => setMonetaryAccountId(e.target.value)} className={inputClass}>
-            <option value="">— {t('payments.monetaryAccount')} —</option>
-            {monetaryAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
+          <SearchableSelect
+            options={monetaryAccounts.map((a) => ({ value: a.id, label: a.name }))}
+            value={monetaryAccountId}
+            onChange={setMonetaryAccountId}
+            placeholder={`— ${t('payments.monetaryAccount')} —`}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

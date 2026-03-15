@@ -5,7 +5,6 @@ import TopNav from './TopNav'
 import DashboardPage from '../../pages/dashboard/DashboardPage'
 
 import AccountsListPage from '../../pages/accounts/AccountsListPage'
-import AccountFormPage from '../../pages/accounts/AccountFormPage'
 
 import ProductsListPage from '../../pages/products/ProductsListPage'
 import ProductFormPage from '../../pages/products/ProductFormPage'
@@ -41,8 +40,6 @@ export default function AppLayout() {
             <Route path="/dashboard" element={<DashboardPage />} />
 
             <Route path="/accounts" element={<AccountsListPage />} />
-            <Route path="/accounts/new" element={<AccountFormPage />} />
-            <Route path="/accounts/:id/edit" element={<AccountFormPage />} />
 
             <Route path="/products" element={<ProductsListPage />} />
             <Route path="/products/new" element={<ProductFormPage />} />

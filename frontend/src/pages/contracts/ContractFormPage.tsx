@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Account { id: string; name: string }
 interface Product { id: string; name: string }
@@ -109,17 +110,23 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.customer')}</label>
-          <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} required className={inputClass}>
-            <option value="">— {t('contracts.customer')} —</option>
-            {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <SearchableSelect
+            options={customers.map((c) => ({ value: c.id, label: c.name }))}
+            value={customerId}
+            onChange={setCustomerId}
+            placeholder={`— ${t('contracts.customer')} —`}
+            required
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.product')}</label>
-          <select value={productId} onChange={(e) => setProductId(e.target.value)} required className={inputClass}>
-            <option value="">— {t('contracts.product')} —</option>
-            {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          <SearchableSelect
+            options={products.map((p) => ({ value: p.id, label: p.name }))}
+            value={productId}
+            onChange={setProductId}
+            placeholder={`— ${t('contracts.product')} —`}
+            required
+          />
         </div>
       </div>
 

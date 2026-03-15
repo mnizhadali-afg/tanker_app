@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Contract {
   id: string
@@ -52,12 +53,13 @@ export default function InvoiceFormPage({ onSuccess, onCancel }: Props = {}) {
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.contract')}</label>
-        <select value={contractId} onChange={(e) => setContractId(e.target.value)} required className={inputClass}>
-          <option value="">— {t('invoices.contract')} —</option>
-          {contracts.map((c) => (
-            <option key={c.id} value={c.id}>{c.code} ({c.customer.name})</option>
-          ))}
-        </select>
+        <SearchableSelect
+          options={contracts.map((c) => ({ value: c.id, label: `${c.code} (${c.customer.name})` }))}
+          value={contractId}
+          onChange={setContractId}
+          placeholder={`— ${t('invoices.contract')} —`}
+          required
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.issueDate')}</label>

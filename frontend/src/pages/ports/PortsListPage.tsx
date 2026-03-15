@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
+import DetailModal from '../../components/shared/DetailModal';
 import PortFormPage from './PortFormPage';
 import api from '../../lib/axios';
 
@@ -17,6 +18,7 @@ export default function PortsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [detailRow, setDetailRow] = useState<Port | null>(null);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchPorts = () => {
@@ -28,6 +30,7 @@ export default function PortsListPage() {
   const handleDelete = async (port: Port) => {
     if (!confirm(t('app.confirm') + ': ' + port.name + '?')) return;
     setDeleteError('');
+    setDetailRow(null);
     try {
       await api.delete(`/ports/${port.id}`);
       setPorts((prev) => prev.filter((p) => p.id !== port.id));
@@ -45,26 +48,6 @@ export default function PortsListPage() {
   const columns: Column<Port>[] = [
     { key: 'name', label: t('ports.name') },
     { key: 'producer', label: t('ports.producer'), render: (r) => r.producer.name },
-    {
-      key: 'actions',
-      label: t('app.actions'),
-      render: (r) => (
-        <div className='flex gap-2'>
-          <button
-            className='text-xs text-primary-600 hover:underline cursor-pointer'
-            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
-          >
-            {t('app.edit')}
-          </button>
-          <button
-            className='text-xs text-red-500 hover:underline'
-            onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-          >
-            {t('app.delete')}
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -94,7 +77,34 @@ export default function PortsListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setDetailRow(r)} totalCount={ports.length} label={t('nav.ports')} />
+
+      {detailRow && (
+        <DetailModal
+          title={detailRow.name}
+          fields={[
+            { label: t('ports.name'), value: detailRow.name },
+            { label: t('ports.producer'), value: detailRow.producer.name },
+          ]}
+          onClose={() => setDetailRow(null)}
+          actions={
+            <>
+              <button
+                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
+              >
+                {t('app.delete')}
+              </button>
+              <button
+                onClick={() => { setDetailRow(null); setModalId(detailRow.id); }}
+                className='px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer'
+              >
+                {t('app.edit')}
+              </button>
+            </>
+          }
+        />
+      )}
 
       {modalId !== null && (
         <Modal

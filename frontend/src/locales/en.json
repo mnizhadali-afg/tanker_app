@@ -29,7 +29,9 @@
     "welcome": "Welcome",
     "noItems": "No items found",
     "new": "New",
-    "processing": "Processing…"
+    "processing": "Processing…",
+    "showing": "Showing",
+    "of": "of"
   },
   "auth": {
     "login": "Login",

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
+import DetailModal from '../../components/shared/DetailModal';
 import { formatDate, formatNumber } from '../../utils/formatting';
 import api from '../../lib/axios';
 
@@ -27,6 +28,7 @@ export default function PaymentsListPage() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [detailRow, setDetailRow] = useState<Payment | null>(null);
 
   useEffect(() => {
     api
@@ -69,16 +71,6 @@ export default function PaymentsListPage() {
       render: (r) => r.payee?.name ?? '—',
     },
     {
-      key: 'contract',
-      label: t('contracts.code'),
-      render: (r) => r.contract?.code ?? '—',
-    },
-    {
-      key: 'invoice',
-      label: t('invoices.invoiceNumber'),
-      render: (r) => r.invoice?.invoiceNumber ?? '—',
-    },
-    {
       key: 'amountAfn',
       label: t('payments.amountAfn'),
       render: (r) => (r.amountAfn ? formatNumber(r.amountAfn, locale) : '—'),
@@ -103,7 +95,7 @@ export default function PaymentsListPage() {
         </h1>
         <button
           onClick={() => navigate('/payments/new')}
-          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
+          className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
         >
           + {t('payments.new')}
         </button>
@@ -117,7 +109,7 @@ export default function PaymentsListPage() {
               <button
                 key={type}
                 onClick={() => setTypeFilter(type)}
-                className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                className={`text-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                   typeFilter === type
                     ? 'bg-gray-600 text-white border-gray-600'
                     : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
@@ -152,7 +144,37 @@ export default function PaymentsListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} />
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        loading={loading}
+        emptyMessage={t('app.noItems')}
+        onRowClick={(r) => setDetailRow(r)}
+        totalCount={payments.length}
+        label={t('nav.payments')}
+      />
+
+      {detailRow && (
+        <DetailModal
+          title={t(`payments.types.${detailRow.type}`)}
+          subtitle={
+            <span className='text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full'>
+              {t(`payments.levels.${detailRow.linkedLevel}`)}
+            </span>
+          }
+          fields={[
+            { label: t('payments.payer'), value: detailRow.payer?.name },
+            { label: t('payments.payee'), value: detailRow.payee?.name },
+            { label: t('payments.transactionDate'), value: formatDate(detailRow.transactionDate, locale) },
+            { label: t('payments.amountAfn'), value: detailRow.amountAfn ? formatNumber(detailRow.amountAfn, locale) + ' ' + t('currency.afn') : undefined },
+            { label: t('payments.amountUsd'), value: detailRow.amountUsd ? formatNumber(detailRow.amountUsd, locale) + ' ' + t('currency.usd') : undefined },
+            ...(detailRow.contract ? [{ label: t('contracts.code'), value: detailRow.contract.code }] : []),
+            ...(detailRow.invoice ? [{ label: t('invoices.invoiceNumber'), value: detailRow.invoice.invoiceNumber }] : []),
+            ...(detailRow.notes ? [{ label: t('app.notes'), value: detailRow.notes, wide: true }] : []),
+          ]}
+          onClose={() => setDetailRow(null)}
+        />
+      )}
     </div>
   );
 }

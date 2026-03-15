@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import DataTable, { type Column } from '../../components/shared/DataTable'
+import AccountDrawer from '../accounts/AccountDrawer'
 import { formatNumber } from '../../utils/formatting'
 import api from '../../lib/axios'
 
@@ -24,6 +25,7 @@ export default function CustomerBalanceReport() {
   const [rows, setRows] = useState<CustomerBalance[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
 
   useEffect(() => {
     api.get('/reports/customer-balances')
@@ -84,7 +86,7 @@ export default function CustomerBalanceReport() {
       label: t('app.actions'),
       render: (r) => (
         <button
-          className="text-xs text-primary-600 hover:underline"
+          className="text-xs text-primary-600 hover:underline cursor-pointer"
           onClick={(e) => { e.stopPropagation(); navigate(`/payments/new?customerId=${r.customer.id}`) }}
         >
           {t('payments.new')}
@@ -110,7 +112,15 @@ export default function CustomerBalanceReport() {
           />
         </div>
       </div>
-      <DataTable columns={columns} rows={filtered} loading={loading} />
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        loading={loading}
+        onRowClick={(r) => setSelectedCustomerId(r.customer.id)}
+        totalCount={rows.length}
+        label={t('accounts.types.customer')}
+      />
+      <AccountDrawer accountId={selectedCustomerId} onClose={() => setSelectedCustomerId(null)} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
+import DetailModal from '../../components/shared/DetailModal';
 import LicenseFormPage from './LicenseFormPage';
 import { formatDate } from '../../utils/formatting';
 import api from '../../lib/axios';
@@ -22,6 +23,7 @@ export default function LicensesListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [detailRow, setDetailRow] = useState<License | null>(null);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchLicenses = () => {
@@ -33,6 +35,7 @@ export default function LicensesListPage() {
   const handleDelete = async (license: License) => {
     if (!confirm(t('app.confirm') + ': ' + license.licenseNumber + '?')) return;
     setDeleteError('');
+    setDetailRow(null);
     try {
       await api.delete(`/licenses/${license.id}`);
       setLicenses((prev) => prev.filter((l) => l.id !== license.id));
@@ -53,26 +56,6 @@ export default function LicensesListPage() {
     { key: 'producer', label: t('licenses.producer'), render: (r) => r.producer.name },
     { key: 'validFrom', label: t('licenses.validFrom'), render: (r) => formatDate(r.validFrom, locale) },
     { key: 'validTo', label: t('licenses.validTo'), render: (r) => formatDate(r.validTo, locale) },
-    {
-      key: 'actions',
-      label: t('app.actions'),
-      render: (r) => (
-        <div className='flex gap-2'>
-          <button
-            className='text-xs text-primary-600 hover:underline cursor-pointer'
-            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
-          >
-            {t('app.edit')}
-          </button>
-          <button
-            className='text-xs text-red-500 hover:underline'
-            onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-          >
-            {t('app.delete')}
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -102,7 +85,37 @@ export default function LicensesListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setDetailRow(r)} totalCount={licenses.length} label={t('nav.licenses')} />
+
+      {detailRow && (
+        <DetailModal
+          title={detailRow.licenseNumber}
+          fields={[
+            { label: t('licenses.licenseNumber'), value: detailRow.licenseNumber },
+            { label: t('licenses.product'), value: detailRow.product.name },
+            { label: t('licenses.producer'), value: detailRow.producer.name },
+            { label: t('licenses.validFrom'), value: formatDate(detailRow.validFrom, locale) },
+            { label: t('licenses.validTo'), value: formatDate(detailRow.validTo, locale) },
+          ]}
+          onClose={() => setDetailRow(null)}
+          actions={
+            <>
+              <button
+                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
+              >
+                {t('app.delete')}
+              </button>
+              <button
+                onClick={() => { setDetailRow(null); setModalId(detailRow.id); }}
+                className='px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer'
+              >
+                {t('app.edit')}
+              </button>
+            </>
+          }
+        />
+      )}
 
       {modalId !== null && (
         <Modal

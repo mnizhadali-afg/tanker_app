@@ -160,9 +160,15 @@ export default function AccountsListPage() {
         loading={loading}
         onRowClick={(row) => setSelectedId(row.id)}
         emptyMessage={t('app.noItems')}
+        totalCount={accounts.length}
+        label={t('nav.accounts')}
       />
 
-      <AccountDrawer accountId={selectedId} onClose={() => setSelectedId(null)} />
+      <AccountDrawer
+        accountId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onEdit={(id) => { setSelectedId(null); setModalId(id); }}
+      />
 
       {modalId !== null && (
         <Modal

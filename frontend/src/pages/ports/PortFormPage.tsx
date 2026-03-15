@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Account { id: string; name: string }
 
@@ -63,10 +64,13 @@ export default function PortFormPage({ formId, onSuccess, onCancel }: Props = {}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('ports.producer')}</label>
-        <select value={producerId} onChange={(e) => setProducerId(e.target.value)} required className={inputClass}>
-          <option value="">— {t('ports.producer')} —</option>
-          {producers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <SearchableSelect
+          options={producers.map((p) => ({ value: p.id, label: p.name }))}
+          value={producerId}
+          onChange={setProducerId}
+          placeholder={`— ${t('ports.producer')} —`}
+          required
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('app.notes')}</label>

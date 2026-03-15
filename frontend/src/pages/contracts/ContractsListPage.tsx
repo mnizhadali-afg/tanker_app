@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import Modal from '../../components/shared/Modal';
+import DetailModal from '../../components/shared/DetailModal';
 import ContractFormPage from './ContractFormPage';
 import api from '../../lib/axios';
 
@@ -19,6 +20,7 @@ export default function ContractsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [detailRow, setDetailRow] = useState<Contract | null>(null);
   const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchContracts = () => {
@@ -30,6 +32,7 @@ export default function ContractsListPage() {
   const handleDelete = async (contract: Contract) => {
     if (!confirm(t('app.confirm') + ': ' + contract.code + '?')) return;
     setDeleteError('');
+    setDetailRow(null);
     try {
       await api.delete(`/contracts/${contract.id}`);
       setContracts((prev) => prev.filter((c) => c.id !== contract.id));
@@ -49,26 +52,6 @@ export default function ContractsListPage() {
     { key: 'customer', label: t('contracts.customer'), render: (r) => r.customer.name },
     { key: 'product', label: t('contracts.product'), render: (r) => r.product.name },
     { key: 'calculationType', label: t('contracts.calculationType'), render: (r) => t(`contracts.calculationTypes.${r.calculationType}`) },
-    {
-      key: 'actions',
-      label: t('app.actions'),
-      render: (r) => (
-        <div className='flex gap-2'>
-          <button
-            className='text-xs text-primary-600 hover:underline cursor-pointer'
-            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
-          >
-            {t('app.edit')}
-          </button>
-          <button
-            className='text-xs text-red-500 hover:underline'
-            onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-          >
-            {t('app.delete')}
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -98,7 +81,36 @@ export default function ContractsListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setDetailRow(r)} totalCount={contracts.length} label={t('nav.contracts')} />
+
+      {detailRow && (
+        <DetailModal
+          title={detailRow.code}
+          fields={[
+            { label: t('contracts.code'), value: detailRow.code },
+            { label: t('contracts.calculationType'), value: t(`contracts.calculationTypes.${detailRow.calculationType}`) },
+            { label: t('contracts.customer'), value: detailRow.customer.name },
+            { label: t('contracts.product'), value: detailRow.product.name },
+          ]}
+          onClose={() => setDetailRow(null)}
+          actions={
+            <>
+              <button
+                onClick={() => { setDetailRow(null); handleDelete(detailRow); }}
+                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer'
+              >
+                {t('app.delete')}
+              </button>
+              <button
+                onClick={() => { setDetailRow(null); setModalId(detailRow.id); }}
+                className='px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer'
+              >
+                {t('app.edit')}
+              </button>
+            </>
+          }
+        />
+      )}
 
       {modalId !== null && (
         <Modal

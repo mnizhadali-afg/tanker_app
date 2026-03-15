@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import DataTable, { type Column } from '../../components/shared/DataTable'
 import StatusBadge from '../../components/shared/StatusBadge'
+import DetailModal from '../../components/shared/DetailModal'
 import { formatDate, formatNumber } from '../../utils/formatting'
 import api from '../../lib/axios'
 
@@ -14,8 +15,8 @@ interface InvoiceStatus {
   issueDate: string
   totalDebtAfn: number
   totalDebtUsd: number
-  paidAfn: number    // field name from backend
-  paidUsd: number    // field name from backend
+  paidAfn: number
+  paidUsd: number
 }
 
 export default function InvoiceStatusReport() {
@@ -25,6 +26,7 @@ export default function InvoiceStatusReport() {
   const [rows, setRows] = useState<InvoiceStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [detailRow, setDetailRow] = useState<InvoiceStatus | null>(null)
 
   useEffect(() => {
     api.get('/reports/invoice-status').then((r) => setRows(r.data)).finally(() => setLoading(false))
@@ -48,11 +50,6 @@ export default function InvoiceStatusReport() {
       key: 'totalDebtAfn',
       label: t('reports.totalDebt') + ' (' + t('currency.afn') + ')',
       render: (r) => formatNumber(r.totalDebtAfn, locale),
-    },
-    {
-      key: 'paidAfn',
-      label: t('reports.totalPaid') + ' (' + t('currency.afn') + ')',
-      render: (r) => formatNumber(r.paidAfn, locale),
     },
     {
       key: 'outstandingAfn',
@@ -100,8 +97,36 @@ export default function InvoiceStatusReport() {
         columns={columns}
         rows={filtered}
         loading={loading}
-        onRowClick={(row) => navigate(`/invoices/${row.id}`)}
+        onRowClick={(row) => setDetailRow(row)}
+        totalCount={rows.length}
+        label={t('nav.invoices')}
       />
+
+      {detailRow && (
+        <DetailModal
+          title={detailRow.invoiceNumber}
+          subtitle={<StatusBadge status={detailRow.status} label={t(`invoices.statuses.${detailRow.status}`)} />}
+          fields={[
+            { label: t('invoices.customer'), value: detailRow.customer.name },
+            { label: t('invoices.issueDate'), value: formatDate(detailRow.issueDate, locale) },
+            { label: t('reports.totalDebt') + ' (' + t('currency.afn') + ')', value: formatNumber(detailRow.totalDebtAfn, locale) },
+            { label: t('reports.totalPaid') + ' (' + t('currency.afn') + ')', value: formatNumber(detailRow.paidAfn, locale) },
+            { label: t('reports.outstanding') + ' (' + t('currency.afn') + ')', value: formatNumber(Number(detailRow.totalDebtAfn) - Number(detailRow.paidAfn), locale) },
+            { label: t('reports.totalDebt') + ' (' + t('currency.usd') + ')', value: formatNumber(detailRow.totalDebtUsd, locale) },
+            { label: t('reports.totalPaid') + ' (' + t('currency.usd') + ')', value: formatNumber(detailRow.paidUsd, locale) },
+            { label: t('reports.outstanding') + ' (' + t('currency.usd') + ')', value: formatNumber(Number(detailRow.totalDebtUsd) - Number(detailRow.paidUsd), locale) },
+          ]}
+          onClose={() => setDetailRow(null)}
+          actions={
+            <button
+              onClick={() => { setDetailRow(null); navigate(`/invoices/${detailRow.id}`); }}
+              className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer"
+            >
+              {t('app.view')}
+            </button>
+          }
+        />
+      )}
     </div>
   )
 }

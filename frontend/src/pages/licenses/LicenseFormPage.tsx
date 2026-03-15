@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Account { id: string; name: string }
 interface Product { id: string; name: string }
@@ -72,17 +73,23 @@ export default function LicenseFormPage({ formId, onSuccess, onCancel }: Props =
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('licenses.product')}</label>
-        <select value={productId} onChange={(e) => setProductId(e.target.value)} required className={inputClass}>
-          <option value="">— {t('licenses.product')} —</option>
-          {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <SearchableSelect
+          options={products.map((p) => ({ value: p.id, label: p.name }))}
+          value={productId}
+          onChange={setProductId}
+          placeholder={`— ${t('licenses.product')} —`}
+          required
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{t('licenses.producer')}</label>
-        <select value={producerId} onChange={(e) => setProducerId(e.target.value)} required className={inputClass}>
-          <option value="">— {t('licenses.producer')} —</option>
-          {producers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <SearchableSelect
+          options={producers.map((p) => ({ value: p.id, label: p.name }))}
+          value={producerId}
+          onChange={setProducerId}
+          placeholder={`— ${t('licenses.producer')} —`}
+          required
+        />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

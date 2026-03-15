@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import DataTable, { type Column } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
+import DetailModal from '../../components/shared/DetailModal'
 import ProductFormPage from './ProductFormPage'
 import api from '../../lib/axios'
 
@@ -13,6 +14,7 @@ export default function ProductsListPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [detailRow, setDetailRow] = useState<Product | null>(null)
   const [modalId, setModalId] = useState<string | null | 'new'>(null)
 
   const fetchProducts = () => {
@@ -24,6 +26,7 @@ export default function ProductsListPage() {
   const handleDelete = async (product: Product) => {
     if (!confirm(t('app.confirm') + ': ' + product.name + '?')) return
     setDeleteError('')
+    setDetailRow(null)
     try {
       await api.delete(`/products/${product.id}`)
       setProducts((prev) => prev.filter((p) => p.id !== product.id))
@@ -41,20 +44,6 @@ export default function ProductsListPage() {
   const columns: Column<Product>[] = [
     { key: 'name', label: t('products.name') },
     { key: 'unit', label: t('products.unit') },
-    {
-      key: 'actions',
-      label: t('app.actions'),
-      render: (r) => (
-        <div className="flex gap-2">
-          <button className="text-xs text-primary-600 hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setModalId(r.id) }}>
-            {t('app.edit')}
-          </button>
-          <button className="text-xs text-red-500 hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); handleDelete(r) }}>
-            {t('app.delete')}
-          </button>
-        </div>
-      ),
-    },
   ]
 
   return (
@@ -84,8 +73,37 @@ export default function ProductsListPage() {
         rows={filtered}
         loading={loading}
         emptyMessage={t('app.noItems')}
-        onRowClick={(r) => setModalId(r.id)}
+        onRowClick={(r) => setDetailRow(r)}
+        totalCount={products.length}
+        label={t('nav.products')}
       />
+
+      {detailRow && (
+        <DetailModal
+          title={detailRow.name}
+          fields={[
+            { label: t('products.name'), value: detailRow.name },
+            { label: t('products.unit'), value: detailRow.unit },
+          ]}
+          onClose={() => setDetailRow(null)}
+          actions={
+            <>
+              <button
+                onClick={() => { setDetailRow(null); handleDelete(detailRow) }}
+                className="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+              >
+                {t('app.delete')}
+              </button>
+              <button
+                onClick={() => { setDetailRow(null); setModalId(detailRow.id) }}
+                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer"
+              >
+                {t('app.edit')}
+              </button>
+            </>
+          }
+        />
+      )}
 
       {modalId !== null && (
         <Modal
