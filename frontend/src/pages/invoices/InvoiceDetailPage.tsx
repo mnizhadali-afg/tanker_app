@@ -7,6 +7,7 @@ import InvoicePrintWrapper from '../../components/InvoicePrint/InvoicePrintWrapp
 import InvoiceStatusBar from './components/InvoiceStatusBar'
 import FinalizeDialog from './components/FinalizeDialog'
 import CancelDialog from './components/CancelDialog'
+import DeleteDialog from './components/DeleteDialog'
 import type { TankerRow } from '../../components/TankerGrid/useTankerGrid'
 import type { CalculationType } from '@tanker/shared'
 
@@ -39,6 +40,7 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState('')
   const [showFinalize, setShowFinalize] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   // Live tanker rows kept in sync with TankerGrid state for print
   const [liveRows, setLiveRows] = useState<TankerRow[]>([])
@@ -77,6 +79,17 @@ export default function InvoiceDetailPage() {
       const { data } = await api.patch(`/invoices/${invoice.id}/cancel`)
       setInvoice((prev) => prev ? { ...prev, status: data.status } : prev)
       setShowCancel(false)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!invoice) return
+    setActionLoading(true)
+    try {
+      await api.delete(`/invoices/${invoice.id}`)
+      navigate('/invoices')
     } finally {
       setActionLoading(false)
     }
@@ -129,6 +142,7 @@ export default function InvoiceDetailPage() {
         issueDate={invoice.issueDate}
         onFinalize={invoice.status === 'draft' ? () => setShowFinalize(true) : undefined}
         onCancel={invoice.status === 'draft' ? () => setShowCancel(true) : undefined}
+        onDelete={invoice.status !== 'final' ? () => setShowDelete(true) : undefined}
       />
 
       {/* Notes */}
@@ -160,6 +174,13 @@ export default function InvoiceDetailPage() {
         <CancelDialog
           onConfirm={handleCancel}
           onCancel={() => setShowCancel(false)}
+          loading={actionLoading}
+        />
+      )}
+      {showDelete && (
+        <DeleteDialog
+          onConfirm={handleDelete}
+          onCancel={() => setShowDelete(false)}
           loading={actionLoading}
         />
       )}
