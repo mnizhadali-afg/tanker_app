@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
+import Modal from '../../components/shared/Modal';
+import ContractFormPage from './ContractFormPage';
 import api from '../../lib/axios';
 
 interface Contract {
@@ -14,15 +15,17 @@ interface Contract {
 
 export default function ContractsListPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
-  useEffect(() => {
+  const fetchContracts = () => {
     api.get('/contracts').then((r) => setContracts(r.data)).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchContracts(); }, []);
 
   const handleDelete = async (contract: Contract) => {
     if (!confirm(t('app.confirm') + ': ' + contract.code + '?')) return;
@@ -52,8 +55,8 @@ export default function ContractsListPage() {
       render: (r) => (
         <div className='flex gap-2'>
           <button
-            className='text-xs text-primary-600 hover:underline'
-            onClick={(e) => { e.stopPropagation(); navigate(`/contracts/${r.id}/edit`); }}
+            className='text-xs text-primary-600 hover:underline cursor-pointer'
+            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
           >
             {t('app.edit')}
           </button>
@@ -73,8 +76,8 @@ export default function ContractsListPage() {
       <div className='flex items-center justify-between'>
         <h1 className='text-xl font-bold text-gray-900'>{t('contracts.title')}</h1>
         <button
-          onClick={() => navigate('/contracts/new')}
-          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
+          onClick={() => setModalId('new')}
+          className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
         >
           + {t('contracts.new')}
         </button>
@@ -95,7 +98,21 @@ export default function ContractsListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} onRowClick={(r) => navigate(`/contracts/${r.id}/edit`)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+
+      {modalId !== null && (
+        <Modal
+          title={modalId === 'new' ? t('contracts.new') : t('app.edit')}
+          onClose={() => setModalId(null)}
+          size="lg"
+        >
+          <ContractFormPage
+            formId={modalId === 'new' ? undefined : modalId}
+            onSuccess={() => { setModalId(null); fetchContracts(); }}
+            onCancel={() => setModalId(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

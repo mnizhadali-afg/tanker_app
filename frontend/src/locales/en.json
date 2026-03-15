@@ -26,7 +26,10 @@
     "updatedAt": "Updated At",
     "all": "All",
     "view": "View",
-    "loading": "Loading…"
+    "welcome": "Welcome",
+    "noItems": "No items found",
+    "new": "New",
+    "processing": "Processing…"
   },
   "auth": {
     "login": "Login",

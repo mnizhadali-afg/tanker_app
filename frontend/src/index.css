@@ -46,6 +46,13 @@ body {
   line-height: 1.6;
 }
 
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href],
+label[for] {
+  cursor: pointer;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

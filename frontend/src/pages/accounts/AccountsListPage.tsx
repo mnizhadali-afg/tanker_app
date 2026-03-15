@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import AccountDrawer from './AccountDrawer';
+import Modal from '../../components/shared/Modal';
+import AccountFormPage from './AccountFormPage';
 import api from '../../lib/axios';
 
 interface Account {
@@ -14,7 +15,6 @@ interface Account {
 
 export default function AccountsListPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +22,7 @@ export default function AccountsListPage() {
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
   const fetchAccounts = () => {
     const params = typeFilter ? `?type=${typeFilter}` : '';
@@ -70,10 +71,10 @@ export default function AccountsListPage() {
       render: (row) => (
         <div className='flex gap-2'>
           <button
-            className='text-xs text-primary-600 hover:underline'
+            className='text-xs text-primary-600 hover:underline cursor-pointer'
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/accounts/${row.id}/edit`);
+              setModalId(row.id);
             }}
           >
             {t('app.edit')}
@@ -99,8 +100,8 @@ export default function AccountsListPage() {
           {t('accounts.title')}
         </h1>
         <button
-          onClick={() => navigate('/accounts/new')}
-          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
+          onClick={() => setModalId('new')}
+          className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
         >
           + {t('accounts.new')}
         </button>
@@ -158,10 +159,23 @@ export default function AccountsListPage() {
         rows={filtered}
         loading={loading}
         onRowClick={(row) => setSelectedId(row.id)}
-        emptyMessage={t('app.search')}
+        emptyMessage={t('app.noItems')}
       />
 
       <AccountDrawer accountId={selectedId} onClose={() => setSelectedId(null)} />
+
+      {modalId !== null && (
+        <Modal
+          title={modalId === 'new' ? t('accounts.new') : t('app.edit')}
+          onClose={() => setModalId(null)}
+        >
+          <AccountFormPage
+            formId={modalId === 'new' ? undefined : modalId}
+            onSuccess={() => { setModalId(null); fetchAccounts(); }}
+            onCancel={() => setModalId(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
+import Modal from '../../components/shared/Modal';
+import LicenseFormPage from './LicenseFormPage';
 import { formatDate } from '../../utils/formatting';
 import api from '../../lib/axios';
 
@@ -16,16 +17,18 @@ interface License {
 
 export default function LicensesListPage() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const locale = i18n.language;
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
-  useEffect(() => {
+  const fetchLicenses = () => {
     api.get('/licenses').then((r) => setLicenses(r.data)).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchLicenses(); }, []);
 
   const handleDelete = async (license: License) => {
     if (!confirm(t('app.confirm') + ': ' + license.licenseNumber + '?')) return;
@@ -56,8 +59,8 @@ export default function LicensesListPage() {
       render: (r) => (
         <div className='flex gap-2'>
           <button
-            className='text-xs text-primary-600 hover:underline'
-            onClick={(e) => { e.stopPropagation(); navigate(`/licenses/${r.id}/edit`); }}
+            className='text-xs text-primary-600 hover:underline cursor-pointer'
+            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
           >
             {t('app.edit')}
           </button>
@@ -77,8 +80,8 @@ export default function LicensesListPage() {
       <div className='flex items-center justify-between'>
         <h1 className='text-xl font-bold text-gray-900'>{t('licenses.title')}</h1>
         <button
-          onClick={() => navigate('/licenses/new')}
-          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
+          onClick={() => setModalId('new')}
+          className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
         >
           + {t('licenses.new')}
         </button>
@@ -99,7 +102,20 @@ export default function LicensesListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} onRowClick={(r) => navigate(`/licenses/${r.id}/edit`)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+
+      {modalId !== null && (
+        <Modal
+          title={modalId === 'new' ? t('licenses.new') : t('app.edit')}
+          onClose={() => setModalId(null)}
+        >
+          <LicenseFormPage
+            formId={modalId === 'new' ? undefined : modalId}
+            onSuccess={() => { setModalId(null); fetchLicenses(); }}
+            onCancel={() => setModalId(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

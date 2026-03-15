@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
+import Modal from '../../components/shared/Modal';
+import InvoiceFormPage from './InvoiceFormPage';
 import { formatDate, formatNumber } from '../../utils/formatting';
 import api from '../../lib/axios';
 
@@ -224,6 +226,7 @@ export default function InvoicesListPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [showNewModal, setShowNewModal] = useState(false);
 
   // Modal / dialog state
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
@@ -369,8 +372,8 @@ export default function InvoicesListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">{t('invoices.title')}</h1>
         <button
-          onClick={() => navigate('/invoices/new')}
-          className="bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg"
+          onClick={() => setShowNewModal(true)}
+          className="bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer"
         >
           + {t('invoices.new')}
         </button>
@@ -427,8 +430,19 @@ export default function InvoicesListPage() {
         columns={columns}
         rows={filtered}
         loading={loading}
+        emptyMessage={t('app.noItems')}
         onRowClick={(row) => setDetailInvoice(row)}
       />
+
+      {/* New Invoice Modal */}
+      {showNewModal && (
+        <Modal title={t('invoices.new')} onClose={() => setShowNewModal(false)}>
+          <InvoiceFormPage
+            onSuccess={(id) => { setShowNewModal(false); navigate(`/invoices/${id}`); }}
+            onCancel={() => setShowNewModal(false)}
+          />
+        </Modal>
+      )}
 
       {/* Detail Modal */}
       {detailInvoice && (

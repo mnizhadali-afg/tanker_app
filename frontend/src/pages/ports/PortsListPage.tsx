@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
+import Modal from '../../components/shared/Modal';
+import PortFormPage from './PortFormPage';
 import api from '../../lib/axios';
 
 interface Port {
@@ -12,15 +13,17 @@ interface Port {
 
 export default function PortsListPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [ports, setPorts] = useState<Port[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [modalId, setModalId] = useState<string | null | 'new'>(null);
 
-  useEffect(() => {
+  const fetchPorts = () => {
     api.get('/ports').then((r) => setPorts(r.data)).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchPorts(); }, []);
 
   const handleDelete = async (port: Port) => {
     if (!confirm(t('app.confirm') + ': ' + port.name + '?')) return;
@@ -48,8 +51,8 @@ export default function PortsListPage() {
       render: (r) => (
         <div className='flex gap-2'>
           <button
-            className='text-xs text-primary-600 hover:underline'
-            onClick={(e) => { e.stopPropagation(); navigate(`/ports/${r.id}/edit`); }}
+            className='text-xs text-primary-600 hover:underline cursor-pointer'
+            onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
           >
             {t('app.edit')}
           </button>
@@ -69,8 +72,8 @@ export default function PortsListPage() {
       <div className='flex items-center justify-between'>
         <h1 className='text-xl font-bold text-gray-900'>{t('ports.title')}</h1>
         <button
-          onClick={() => navigate('/ports/new')}
-          className='bg-success-600 hover:bg-green-700 hover:cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-lg'
+          onClick={() => setModalId('new')}
+          className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
         >
           + {t('ports.new')}
         </button>
@@ -91,7 +94,20 @@ export default function PortsListPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} loading={loading} onRowClick={(r) => navigate(`/ports/${r.id}/edit`)} />
+      <DataTable columns={columns} rows={filtered} loading={loading} emptyMessage={t('app.noItems')} onRowClick={(r) => setModalId(r.id)} />
+
+      {modalId !== null && (
+        <Modal
+          title={modalId === 'new' ? t('ports.new') : t('app.edit')}
+          onClose={() => setModalId(null)}
+        >
+          <PortFormPage
+            formId={modalId === 'new' ? undefined : modalId}
+            onSuccess={() => { setModalId(null); fetchPorts(); }}
+            onCancel={() => setModalId(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
