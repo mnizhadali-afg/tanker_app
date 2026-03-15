@@ -24,7 +24,9 @@
     "notes": "Notes",
     "createdAt": "Created At",
     "updatedAt": "Updated At",
-    "all": "All"
+    "all": "All",
+    "view": "View",
+    "loading": "Loading…"
   },
   "auth": {
     "login": "Login",
@@ -118,7 +120,8 @@
       "canceled": "Canceled"
     },
     "totalAfn": "Total (AFN)",
-    "totalUsd": "Total (USD)"
+    "totalUsd": "Total (USD)",
+    "deleteConfirm": "Are you sure you want to permanently delete invoice"
   },
   "tankers": {
     "title": "Tankers",

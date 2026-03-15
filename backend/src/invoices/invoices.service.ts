@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
-  ConflictException,
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateInvoiceDto } from './dto/create-invoice.dto'
@@ -137,10 +136,7 @@ export class InvoicesService {
   }
 
   async delete(id: string) {
-    const invoice = await this.findOne(id)
-    if (invoice.status !== 'draft') {
-      throw new ConflictException('Only draft invoices can be deleted')
-    }
+    await this.findOne(id)
     // Delete tankers first, then invoice
     await this.prisma.$transaction([
       this.prisma.tanker.deleteMany({ where: { invoiceId: id } }),
