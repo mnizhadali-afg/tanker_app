@@ -76,20 +76,21 @@ export default function AccountDrawer({ accountId, onClose }: Props) {
 
   const isOpen = Boolean(accountId);
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className="fixed inset-0 z-40 bg-black/40"
       />
 
-      {/* Drawer panel — slides from end side (left in RTL, right in LTR) */}
-      <div
-        className={`fixed inset-y-0 end-0 z-40 w-96 bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'}`}
-      >
+      {/* Modal — centered */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col pointer-events-auto">
         {/* Header */}
-        <div className='flex items-start justify-between px-5 py-4 border-b border-gray-200'>
+        <div className='flex items-start justify-between px-5 py-4 border-b border-gray-200 rounded-t-2xl'>
           <div className='flex-1 min-w-0'>
             {loadingAccount ? (
               <div className='h-6 w-40 bg-gray-200 rounded animate-pulse' />
@@ -203,7 +204,7 @@ export default function AccountDrawer({ accountId, onClose }: Props) {
 
         {/* Footer actions */}
         {account && (
-          <div className='px-5 py-4 border-t border-gray-200 flex gap-3'>
+          <div className='px-5 py-4 border-t border-gray-200 flex gap-3 rounded-b-2xl'>
             <button
               onClick={() => {
                 onClose();
@@ -226,6 +227,7 @@ export default function AccountDrawer({ accountId, onClose }: Props) {
             )}
           </div>
         )}
+      </div>
       </div>
     </>
   );
