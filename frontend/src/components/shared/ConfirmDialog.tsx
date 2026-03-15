@@ -5,6 +5,7 @@ interface Props {
   title: string
   message: string
   itemName?: string
+  items?: string[]
   confirmLabel: string
   variant?: 'danger' | 'warning' | 'success' | 'primary'
   loading?: boolean
@@ -23,6 +24,7 @@ export default function ConfirmDialog({
   title,
   message,
   itemName,
+  items,
   confirmLabel,
   variant = 'danger',
   loading = false,
@@ -44,7 +46,7 @@ export default function ConfirmDialog({
       onClick={() => { if (!loading) onCancel() }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+        className={`bg-white rounded-2xl shadow-2xl w-full overflow-hidden ${items && items.length > 1 ? 'max-w-md' : 'max-w-sm'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -68,6 +70,16 @@ export default function ConfirmDialog({
           {itemName && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <span className="text-sm font-semibold text-gray-800" dir="auto">{itemName}</span>
+            </div>
+          )}
+          {items && items.length > 0 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-44 overflow-y-auto">
+              {items.map((name, i) => (
+                <div key={i} className="px-3 py-2 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                  <span className="text-sm text-gray-700" dir="auto">{name}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -32,7 +32,11 @@
     "processing": "Processing…",
     "showing": "Showing",
     "of": "of",
-    "deleteConfirmMsg": "Are you sure you want to delete this item? This action cannot be undone."
+    "deleteConfirmMsg": "Are you sure you want to delete this item? This action cannot be undone.",
+    "selected": "selected",
+    "clearSelection": "Clear selection",
+    "deleteSelected": "Delete selected",
+    "bulkDeleteConfirmMsg": "The following items will be permanently deleted. This action cannot be undone."
   },
   "auth": {
     "login": "Login",

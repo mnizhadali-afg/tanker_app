@@ -8,6 +8,7 @@ import PaymentFormPage from './PaymentFormPage';
 import { formatDate, formatNumber } from '../../utils/formatting';
 import api from '../../lib/axios';
 
+
 interface Payment {
   id: string;
   type: string;
@@ -43,6 +44,11 @@ export default function PaymentsListPage() {
   const [pendingDelete, setPendingDelete] = useState<Payment | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Multi-select
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const fetchPayments = () => {
     api.get('/payments').then((r) => setPayments(r.data)).finally(() => setLoading(false));
   };
@@ -64,6 +70,21 @@ export default function PaymentsListPage() {
     } finally { setDeleting(false); }
   };
 
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    setDeleteError('');
+    try {
+      await Promise.all([...selectedIds].map((id) => api.delete(`/payments/monetary/${id}`)));
+      setPayments((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+      setShowBulkDelete(false);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setShowBulkDelete(false);
+    } finally { setBulkDeleting(false); }
+  };
+
   const q = search.trim().toLowerCase();
   const filtered = payments.filter((p) => {
     const matchesType = !typeFilter || p.type === typeFilter;
@@ -75,6 +96,10 @@ export default function PaymentsListPage() {
       (p.invoice?.invoiceNumber ?? '').toLowerCase().includes(q);
     return matchesType && matchesSearch;
   });
+
+  const selectedNames = payments
+    .filter((p) => selectedIds.has(p.id))
+    .map((p) => `${t(`payments.types.${p.type}`)} — ${formatDate(p.transactionDate, locale)}`);
 
   const columns: Column<Payment>[] = [
     { key: 'type', label: t('payments.type'), render: (r) => t(`payments.types.${r.type}`) },
@@ -105,26 +130,59 @@ export default function PaymentsListPage() {
       )}
 
       <div className='flex items-center justify-between gap-3'>
-        <div className='flex gap-2 flex-wrap'>
-          {(['', 'payment_in', 'payment_out', 'exchange'] as const).map((type) => (
+        {/* Left: filter pills OR selection indicator */}
+        {selectedIds.size > 0 ? (
+          <div className='flex items-center gap-2'>
+            <span className='inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 bg-primary-50 border border-primary-200 px-3 py-1.5 rounded-full'>
+              <svg className='w-3.5 h-3.5' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2.5}>
+                <path strokeLinecap='round' strokeLinejoin='round' d='M5 13l4 4L19 7' />
+              </svg>
+              {selectedIds.size}
+            </span>
             <button
-              key={type}
-              onClick={() => setTypeFilter(type)}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                typeFilter === type
-                  ? 'bg-gray-600 text-white border-gray-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-              }`}
+              onClick={() => setSelectedIds(new Set())}
+              className='text-sm text-gray-400 hover:text-gray-600 cursor-pointer transition-colors'
             >
-              {type ? t(`payments.types.${type}`) : t('app.all')}
+              × {t('app.clearSelection')}
             </button>
-          ))}
-        </div>
-        <div className='relative w-72'>
-          <svg className='absolute inset-s-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2}>
-            <path strokeLinecap='round' strokeLinejoin='round' d='M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z' />
-          </svg>
-          <input type='text' value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`${t('app.search')}…`} className='w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white' />
+          </div>
+        ) : (
+          <div className='flex gap-2 flex-wrap'>
+            {(['', 'payment_in', 'payment_out', 'exchange'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`text-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                  typeFilter === type
+                    ? 'bg-gray-600 text-white border-gray-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {type ? t(`payments.types.${type}`) : t('app.all')}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Right: delete button (selection mode) + search */}
+        <div className='flex items-center gap-2'>
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setShowBulkDelete(true)}
+              className='flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 px-3 py-1.5 rounded-lg cursor-pointer font-medium transition-colors'
+            >
+              <svg className='w-3.5 h-3.5' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2}>
+                <path strokeLinecap='round' strokeLinejoin='round' d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+              </svg>
+              {t('app.delete')}
+            </button>
+          )}
+          <div className='relative w-72'>
+            <svg className='absolute inset-s-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2}>
+              <path strokeLinecap='round' strokeLinejoin='round' d='M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z' />
+            </svg>
+            <input type='text' value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`${t('app.search')}…`} className='w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white' />
+          </div>
         </div>
       </div>
 
@@ -136,6 +194,9 @@ export default function PaymentsListPage() {
         onRowClick={(r) => setDetailRow(r)}
         totalCount={payments.length}
         label={t('nav.payments')}
+        selectable
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
 
       {detailRow && (
@@ -186,6 +247,18 @@ export default function PaymentsListPage() {
           loading={deleting}
           onConfirm={handleDelete}
           onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
+      {showBulkDelete && (
+        <ConfirmDialog
+          title={t('app.deleteSelected')}
+          message={t('app.bulkDeleteConfirmMsg')}
+          items={selectedNames}
+          confirmLabel={t('app.delete')}
+          loading={bulkDeleting}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setShowBulkDelete(false)}
         />
       )}
 

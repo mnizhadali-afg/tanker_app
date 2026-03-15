@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatNumber } from '../../utils/formatting'
 
@@ -16,6 +17,9 @@ interface Props<T extends { id: string }> {
   emptyMessage?: string
   totalCount?: number
   label?: string
+  selectable?: boolean
+  selectedIds?: Set<string>
+  onSelectionChange?: (ids: Set<string>) => void
 }
 
 export default function DataTable<T extends { id: string }>({
@@ -26,9 +30,43 @@ export default function DataTable<T extends { id: string }>({
   emptyMessage,
   totalCount,
   label,
+  selectable,
+  selectedIds,
+  onSelectionChange,
 }: Props<T>) {
   const { t, i18n } = useTranslation()
   const locale = i18n.language
+  const headerCheckboxRef = useRef<HTMLInputElement>(null)
+
+  const someSelected = selectable && selectedIds && rows.some((r) => selectedIds.has(r.id))
+  const allSelected = selectable && selectedIds && rows.length > 0 && rows.every((r) => selectedIds.has(r.id))
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = Boolean(someSelected && !allSelected)
+    }
+  }, [someSelected, allSelected])
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange || !selectedIds) return
+    if (allSelected) {
+      const next = new Set(selectedIds)
+      rows.forEach((r) => next.delete(r.id))
+      onSelectionChange(next)
+    } else {
+      const next = new Set(selectedIds)
+      rows.forEach((r) => next.add(r.id))
+      onSelectionChange(next)
+    }
+  }
+
+  const handleToggle = (id: string) => {
+    if (!onSelectionChange || !selectedIds) return
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    onSelectionChange(next)
+  }
 
   if (loading) {
     return (
@@ -44,6 +82,17 @@ export default function DataTable<T extends { id: string }>({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
+              {selectable && (
+                <th className="ps-4 pe-2 py-3 w-8">
+                  <input
+                    ref={headerCheckboxRef}
+                    type="checkbox"
+                    checked={Boolean(allSelected)}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-primary-600 cursor-pointer"
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
@@ -58,28 +107,46 @@ export default function DataTable<T extends { id: string }>({
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={columns.length + (selectable ? 1 : 0)}
                   className="px-4 py-10 text-center text-gray-400"
                 >
                   {emptyMessage ?? '—'}
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.id}
-                  onClick={() => onRowClick?.(row)}
-                  className={`hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
-                >
-                  {columns.map((col) => (
-                    <td key={String(col.key)} className={`px-4 py-2.5 ${col.className ?? ''}`}>
-                      {col.render
-                        ? col.render(row)
-                        : String((row as Record<string, unknown>)[String(col.key)] ?? '—')}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              rows.map((row) => {
+                const isSelected = Boolean(selectable && selectedIds?.has(row.id))
+                return (
+                  <tr
+                    key={row.id}
+                    onClick={() => onRowClick?.(row)}
+                    className={[
+                      'hover:bg-gray-50 transition-colors',
+                      onRowClick ? 'cursor-pointer' : '',
+                      isSelected ? 'bg-primary-50 hover:bg-primary-50' : '',
+                    ].join(' ')}
+                  >
+                    {selectable && (
+                      <td className="ps-4 pe-2 py-2.5 w-8">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggle(row.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded border-gray-300 text-primary-600 cursor-pointer"
+                        />
+                      </td>
+                    )}
+                    {columns.map((col) => (
+                      <td key={String(col.key)} className={`px-4 py-2.5 ${col.className ?? ''}`}>
+                        {col.render
+                          ? col.render(row)
+                          : String((row as Record<string, unknown>)[String(col.key)] ?? '—')}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
