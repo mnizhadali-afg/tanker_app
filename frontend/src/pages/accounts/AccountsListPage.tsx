@@ -157,7 +157,7 @@ export default function AccountsListPage() {
         columns={columns}
         rows={filtered}
         loading={loading}
-        onRowClick={(row) => setSelectedId(row.id)}
+        onRowClick={(row) => { setSelectedIds(new Set()); setSelectedId(row.id); }}
         emptyMessage={t('app.noItems')}
         totalCount={accounts.length}
         label={t('nav.accounts')}

@@ -191,7 +191,7 @@ export default function PaymentsListPage() {
         rows={filtered}
         loading={loading}
         emptyMessage={t('app.noItems')}
-        onRowClick={(r) => setDetailRow(r)}
+        onRowClick={(r) => { setSelectedIds(new Set()); setDetailRow(r); }}
         totalCount={payments.length}
         label={t('nav.payments')}
         selectable

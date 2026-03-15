@@ -138,7 +138,7 @@ export default function PortsListPage() {
         rows={filtered}
         loading={loading}
         emptyMessage={t('app.noItems')}
-        onRowClick={(r) => setDetailRow(r)}
+        onRowClick={(r) => { setSelectedIds(new Set()); setDetailRow(r); }}
         totalCount={ports.length}
         label={t('nav.ports')}
         selectable

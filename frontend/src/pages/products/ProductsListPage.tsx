@@ -129,7 +129,7 @@ export default function ProductsListPage() {
         rows={filtered}
         loading={loading}
         emptyMessage={t('app.noItems')}
-        onRowClick={(r) => setDetailRow(r)}
+        onRowClick={(r) => { setSelectedIds(new Set()); setDetailRow(r); }}
         totalCount={products.length}
         label={t('nav.products')}
         selectable

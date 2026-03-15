@@ -146,7 +146,7 @@ export default function LicensesListPage() {
         rows={filtered}
         loading={loading}
         emptyMessage={t('app.noItems')}
-        onRowClick={(r) => setDetailRow(r)}
+        onRowClick={(r) => { setSelectedIds(new Set()); setDetailRow(r); }}
         totalCount={licenses.length}
         label={t('nav.licenses')}
         selectable
