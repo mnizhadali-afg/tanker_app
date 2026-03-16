@@ -45,6 +45,8 @@
     "password": "رمز عبور",
     "loginTitle": "ورود به سیستم",
     "loginButton": "ورود",
+    "loginSubtitle": "خوش آمدید — لطفاً اطلاعات ورود خود را وارد کنید.",
+    "registerTab": "ثبت‌نام",
     "invalidCredentials": "نام کاربری یا رمز عبور اشتباه است",
     "sessionExpired": "نشست شما منقضی شده است. لطفاً دوباره وارد شوید"
   },

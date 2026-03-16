@@ -45,6 +45,8 @@
     "password": "Password",
     "loginTitle": "Sign In",
     "loginButton": "Sign In",
+    "loginSubtitle": "Welcome back — please enter your credentials to continue.",
+    "registerTab": "Register",
     "invalidCredentials": "Invalid username or password",
     "sessionExpired": "Your session has expired. Please sign in again"
   },
