@@ -57,18 +57,18 @@ function InvoiceDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg mx-4 space-y-4"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 w-full max-w-lg mx-4 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1.5">
-            <h2 className="text-lg font-bold text-gray-900">{invoice.invoiceNumber}</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">{invoice.invoiceNumber}</h2>
             <StatusBadge status={invoice.status} label={t(`invoices.statuses.${invoice.status}`)} />
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-3xl leading-none mt-0.5 cursor-pointer w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+            className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-3xl leading-none mt-0.5 cursor-pointer w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700"
           >
             ×
           </button>
@@ -77,26 +77,26 @@ function InvoiceDetailModal({
         {/* Info grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">{t('invoices.customer')}</p>
-            <p className="font-medium text-gray-900">{invoice.customer.name}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.customer')}</p>
+            <p className="font-medium text-gray-900 dark:text-slate-100">{invoice.customer.name}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">{t('invoices.contract')}</p>
-            <p className="font-medium text-gray-900">{invoice.contract.code}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.contract')}</p>
+            <p className="font-medium text-gray-900 dark:text-slate-100">{invoice.contract.code}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">{t('contracts.calculationType')}</p>
-            <p className="font-medium text-gray-900">
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('contracts.calculationType')}</p>
+            <p className="font-medium text-gray-900 dark:text-slate-100">
               {t(`contracts.calculationTypes.${invoice.contract.calculationType}`)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">{t('invoices.issueDate')}</p>
-            <p className="font-medium text-gray-900">{formatDate(invoice.issueDate, locale)}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.issueDate')}</p>
+            <p className="font-medium text-gray-900 dark:text-slate-100">{formatDate(invoice.issueDate, locale)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">{t('tankers.title')}</p>
-            <p className="font-medium text-gray-900">
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('tankers.title')}</p>
+            <p className="font-medium text-gray-900 dark:text-slate-100">
               {formatNumber(invoice._count.tankers, locale, 0)}
             </p>
           </div>
@@ -109,7 +109,7 @@ function InvoiceDetailModal({
         )}
 
         {/* Action buttons — left: navigation, right: state-changing */}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-slate-700">
           {/* Left zone: Edit / View / Print */}
           <div className="flex items-center gap-2">
             {invoice.status === 'draft' && (
@@ -122,7 +122,7 @@ function InvoiceDetailModal({
             )}
             <button
               onClick={onView}
-              className="text-sm px-3 py-1.5 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-50 cursor-pointer"
+              className="text-sm px-3 py-1.5 border border-gray-400 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
             >
               {t('app.view')}
             </button>
@@ -141,7 +141,7 @@ function InvoiceDetailModal({
 
           {/* Right zone: Finalize | Cancel | Delete */}
           {invoice.status !== 'final' && (
-            <div className="flex items-center divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+            <div className="flex items-center divide-x divide-gray-200 dark:divide-slate-700 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
               {invoice.status === 'draft' && (
                 <>
                   <button
@@ -326,7 +326,7 @@ export default function InvoicesListPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">{t('invoices.title')}</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">{t('invoices.title')}</h1>
         <button
           onClick={() => setShowNewModal(true)}
           className="bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer"
@@ -336,7 +336,7 @@ export default function InvoicesListPage() {
       </div>
 
       {deleteError && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+        <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-2">
           {deleteError}
         </p>
       )}
@@ -351,7 +351,7 @@ export default function InvoicesListPage() {
               className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                 statusFilter === s
                   ? 'bg-gray-600 text-white border-gray-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'
               }`}
             >
               {s ? t(`invoices.statuses.${s}`) : t('app.all')}
@@ -377,7 +377,7 @@ export default function InvoicesListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`${t('app.search')}…`}
-            className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+            className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
       </div>

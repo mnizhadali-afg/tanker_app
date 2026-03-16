@@ -55,7 +55,7 @@ export default function LoginPage() {
       </button>
 
       {/* ── FORM PANEL ── */}
-      <div className="flex flex-col w-full lg:w-115 shrink-0 bg-white px-10 py-8 justify-between">
+      <div className="flex flex-col w-full lg:w-115 shrink-0 bg-white dark:bg-slate-800 px-10 py-8 justify-between">
 
         {/* Logo */}
         <div className="flex items-center gap-2.5">
@@ -67,24 +67,24 @@ export default function LoginPage() {
               <circle cx="18.5" cy="18.5" r="2.5" />
             </svg>
           </div>
-          <span className="text-sm font-bold text-gray-900 tracking-tight">{t('app.title')}</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-slate-100 tracking-tight">{t('app.title')}</span>
         </div>
 
         {/* Form area */}
         <div className="w-full max-w-85 mx-auto space-y-6">
 
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">{t('auth.loginTitle')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">{t('auth.loginTitle')}</h1>
             <p className="text-sm text-gray-500">{t('auth.loginSubtitle')}</p>
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+          <div className="flex bg-gray-100 dark:bg-slate-700 rounded-xl p-1 gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('signin')}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
-                activeTab === 'signin' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'signin' ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-slate-100 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700'
               }`}
             >
               {t('auth.login')}
@@ -101,10 +101,10 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700">{t('auth.username')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">{t('auth.username')}</label>
               <div
                 dir="ltr"
-                className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
+                className="flex items-center gap-3 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 bg-gray-50 dark:bg-slate-700 focus-within:bg-white dark:focus-within:bg-slate-700 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -117,7 +117,7 @@ export default function LoginPage() {
                   required={activeTab === 'signin'}
                   autoFocus
                   autoComplete="username"
-                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-900 placeholder-gray-300 focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-900 dark:text-slate-100 placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none"
                   placeholder="your_username"
                 />
                 {username.length > 0 && (
@@ -131,10 +131,10 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">{t('auth.password')}</label>
               <div
                 dir="ltr"
-                className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
+                className="flex items-center gap-3 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 bg-gray-50 dark:bg-slate-700 focus-within:bg-white dark:focus-within:bg-slate-700 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -146,13 +146,13 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required={activeTab === 'signin'}
                   autoComplete="current-password"
-                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-900 placeholder-gray-300 focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-900 dark:text-slate-100 placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0 transition-colors"
+                  className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 cursor-pointer shrink-0 transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -190,16 +190,16 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 whitespace-nowrap">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
+            <span className="text-xs text-gray-400 dark:text-slate-500 whitespace-nowrap">
               {isRtl ? 'یا از طریق' : 'Or continue with'}
             </span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
           </div>
 
           {/* Social buttons — decorative */}
           <div className="flex justify-center gap-3">
-            <button type="button" className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 cursor-pointer transition-colors">
+            <button type="button" className="w-11 h-11 rounded-full border border-gray-200 dark:border-slate-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -221,7 +221,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-xs text-center text-gray-400 leading-relaxed max-w-xs mx-auto">
+        <p className="text-xs text-center text-gray-400 dark:text-slate-500 leading-relaxed max-w-xs mx-auto">
           {isRtl
             ? 'مورد اعتماد شرکت‌های توزیع سوخت برای مدیریت حساب‌ها، فاکتورها و عملیات مالی.'
             : 'Trusted by fuel distribution companies to manage accounts, invoices & financial operations.'}

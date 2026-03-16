@@ -89,18 +89,18 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
     } finally { setSaving(false) }
   }
 
-  const inputClass = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500'
+  const inputClass = 'w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100'
   const formBody = (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.code')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.code')}</label>
           <input type="text" value={code} onChange={(e) => setCode(e.target.value)} required className={inputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.calculationType')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.calculationType')}</label>
           <select value={calculationType} onChange={(e) => setCalculationType(e.target.value as typeof CALC_TYPES[number])} className={inputClass}>
             {CALC_TYPES.map((ct) => <option key={ct} value={ct}>{t(`contracts.calculationTypes.${ct}`)}</option>)}
           </select>
@@ -109,7 +109,7 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.customer')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.customer')}</label>
           <SearchableSelect
             options={customers.map((c) => ({ value: c.id, label: c.name }))}
             value={customerId}
@@ -119,7 +119,7 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.product')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.product')}</label>
           <SearchableSelect
             options={products.map((p) => ({ value: p.id, label: p.name }))}
             value={productId}
@@ -133,11 +133,11 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
       {calculationType === 'per_ton' && (
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.defaultRatePerTonAfn')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.defaultRatePerTonAfn')}</label>
             <input type="number" value={defaultRatePerTonAfn} onChange={(e) => setDefaultRatePerTonAfn(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('contracts.defaultRatePerTonUsd')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('contracts.defaultRatePerTonUsd')}</label>
             <input type="number" value={defaultRatePerTonUsd} onChange={(e) => setDefaultRatePerTonUsd(e.target.value)} className={inputClass} />
           </div>
         </div>
@@ -150,13 +150,13 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-700">هزینه‌های پیش‌فرض دیگر</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">هزینه‌های پیش‌فرض دیگر</label>
           <button type="button" onClick={addCostEntry} className="text-xs text-primary-600 hover:underline cursor-pointer">+ افزودن</button>
         </div>
         {otherCosts.map((entry, i) => (
           <div key={i} className="flex gap-2 mb-2">
-            <input type="text" placeholder="کلید" value={entry.key} onChange={(e) => updateCostEntry(i, 'key', e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-            <input type="number" placeholder="مقدار" value={entry.value} onChange={(e) => updateCostEntry(i, 'value', e.target.value)} className="w-32 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <input type="text" placeholder="کلید" value={entry.key} onChange={(e) => updateCostEntry(i, 'key', e.target.value)} className="flex-1 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100" />
+            <input type="number" placeholder="مقدار" value={entry.value} onChange={(e) => updateCostEntry(i, 'value', e.target.value)} className="w-32 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100" />
             <button type="button" onClick={() => removeCostEntry(i)} className="text-red-500 hover:text-red-700 px-2 cursor-pointer">×</button>
           </div>
         ))}
@@ -168,14 +168,14 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
       </div>
 
       {isEdit && (
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300 cursor-pointer">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300" />
           {t('app.active')}
         </label>
       )}
 
       <div className="flex gap-3 justify-end">
-        <button type="button" onClick={cancel} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 cursor-pointer">{t('app.cancel')}</button>
+        <button type="button" onClick={cancel} className="px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer">{t('app.cancel')}</button>
         <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">{saving ? t('app.loading') : t('app.save')}</button>
       </div>
     </form>
@@ -186,10 +186,10 @@ export default function ContractFormPage({ formId, onSuccess, onCancel }: Props 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={cancel} className="text-sm text-gray-500 hover:text-gray-700 cursor-pointer">← {t('app.back')}</button>
-        <h1 className="text-xl font-bold text-gray-900">{isEdit ? t('app.edit') : t('contracts.new')}</h1>
+        <button onClick={cancel} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 cursor-pointer">← {t('app.back')}</button>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">{isEdit ? t('app.edit') : t('contracts.new')}</h1>
       </div>
-      <div className="bg-white border border-gray-200 rounded-xl p-6">{formBody}</div>
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6">{formBody}</div>
     </div>
   )
 }

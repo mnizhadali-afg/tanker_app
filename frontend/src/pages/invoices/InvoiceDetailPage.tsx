@@ -96,7 +96,7 @@ export default function InvoiceDetailPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">{t('app.loading')}</div>
+    return <div className="p-8 text-center text-gray-500 dark:text-slate-400">{t('app.loading')}</div>
   }
 
   if (error || !invoice) {
@@ -126,10 +126,10 @@ export default function InvoiceDetailPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/invoices')} className="text-sm text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate('/invoices')} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300">
           ← {t('app.back')}
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100 flex-1">
           {invoice.customer.name} — {invoice.contract.code}
         </h1>
         <InvoicePrintWrapper invoice={invoiceForPrint as Parameters<typeof InvoicePrintWrapper>[0]['invoice']} />

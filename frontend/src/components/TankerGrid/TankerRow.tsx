@@ -30,15 +30,15 @@ const TankerRowComponent = memo(function TankerRowComponent({
   onDelete,
 }: Props) {
   const rowClass = [
-    'flex border-b border-gray-200',
+    'flex border-b border-gray-200 dark:border-slate-700',
     row._saving ? 'opacity-60' : '',
-    row._error ? 'bg-red-50' : '',
+    row._error ? 'bg-red-50 dark:bg-red-900/20' : '',
   ].filter(Boolean).join(' ')
 
   return (
     <div className={rowClass} role="row">
       {/* Row number */}
-      <div className="w-8 shrink-0 flex items-center justify-center text-xs text-gray-400 border-e border-gray-200">
+      <div className="w-8 shrink-0 flex items-center justify-center text-xs text-gray-400 dark:text-slate-500 border-e border-gray-200 dark:border-slate-700">
         {rowIndex + 1}
       </div>
 
@@ -50,7 +50,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
         return (
           <div
             key={col.key}
-            className="shrink-0 border-e border-gray-200"
+            className="shrink-0 border-e border-gray-200 dark:border-slate-700"
             style={{ width: col.width ?? 90 }}
             role="gridcell"
           >

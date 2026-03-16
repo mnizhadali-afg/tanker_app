@@ -271,11 +271,11 @@ export default function TankerGrid({
   })
 
   return (
-    <div className="flex flex-col border border-gray-200 rounded-lg overflow-hidden">
+    <div className="flex flex-col border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
       <div ref={gridRef} className="overflow-x-auto" role="grid" aria-label={t('tankers.title')}>
 
         {/* Group header row */}
-        <div className="flex bg-gray-100 border-b border-gray-300 sticky top-0 z-20">
+        <div className="flex bg-gray-100 dark:bg-slate-700 border-b border-gray-300 dark:border-slate-600 sticky top-0 z-20">
           <div className="w-8 shrink-0" />
           {groupSpans.map((span, i) => {
             const totalWidth = columns
@@ -289,11 +289,11 @@ export default function TankerGrid({
               'producer-usd': 'bg-purple-50 text-purple-700 border-purple-200',
               'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
             }
-            const colorClass = groupColors[span.group] ?? 'bg-gray-100 text-gray-500'
+            const colorClass = groupColors[span.group] ?? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400'
             return (
               <div
                 key={i}
-                className={`shrink-0 text-xs font-semibold text-center border-e border-gray-300 py-0.5 ${colorClass}`}
+                className={`shrink-0 text-xs font-semibold text-center border-e border-gray-300 dark:border-slate-600 py-0.5 ${colorClass}`}
                 style={{ width: totalWidth }}
               >
                 {span.labelKey ? t(span.labelKey) : ''}
@@ -304,12 +304,12 @@ export default function TankerGrid({
         </div>
 
         {/* Column header row */}
-        <div className="flex bg-gray-50 border-b border-gray-200 sticky top-5.5 z-10">
-          <div className="w-8 shrink-0 border-e border-gray-200" />
+        <div className="flex bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-5.5 z-10">
+          <div className="w-8 shrink-0 border-e border-gray-200 dark:border-slate-700" />
           {columns.map((col) => (
             <div
               key={col.key}
-              className="shrink-0 text-xs font-medium text-gray-600 px-1.5 py-2 border-e border-gray-200 truncate"
+              className="shrink-0 text-xs font-medium text-gray-600 dark:text-slate-400 px-1.5 py-2 border-e border-gray-200 dark:border-slate-700 truncate"
               style={{ width: col.width ?? 90 }}
               title={t(col.labelKey)}
             >
@@ -338,7 +338,7 @@ export default function TankerGrid({
           ))}
 
           {rows.length === 0 && (
-            <div className="text-center text-sm text-gray-400 py-10">
+            <div className="text-center text-sm text-gray-400 dark:text-slate-500 py-10">
               {readOnly ? '—' : t('app.add') + ' ' + t('tankers.title')}
             </div>
           )}
@@ -346,8 +346,8 @@ export default function TankerGrid({
 
         {/* Totals footer */}
         {rows.length > 0 && (
-          <div className="flex bg-gray-50 border-t border-gray-300 font-medium">
-            <div className="w-8 shrink-0 border-e border-gray-200" />
+          <div className="flex bg-gray-50 dark:bg-slate-800 border-t border-gray-300 dark:border-slate-600 font-medium">
+            <div className="w-8 shrink-0 border-e border-gray-200 dark:border-slate-700" />
             {columns.map((col) => {
               let display = ''
               if (col.key === 'customerDebtAfn') display = totalDebtAfn.toLocaleString()
@@ -355,7 +355,7 @@ export default function TankerGrid({
               return (
                 <div
                   key={col.key}
-                  className="shrink-0 text-xs px-1.5 py-1.5 border-e border-gray-200 text-gray-700"
+                  className="shrink-0 text-xs px-1.5 py-1.5 border-e border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300"
                   style={{ width: col.width ?? 90 }}
                 >
                   {display}
@@ -368,7 +368,7 @@ export default function TankerGrid({
 
       {/* Toolbar */}
       {!readOnly && (
-        <div className="px-3 py-2 border-t border-gray-200 bg-white flex items-center gap-3">
+        <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-3">
           <button
             onClick={handleAddRow}
             className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -376,14 +376,14 @@ export default function TankerGrid({
             + {t('app.add')} {t('tankers.title')}
           </button>
 
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-slate-500">
             {t('tankers.title')}: {rows.length}
           </span>
 
               {/* Right-side auto-save status — one indicator at a time */}
           <div className="ms-auto flex items-center">
             {savingCount > 0 && (
-              <span className="text-xs text-gray-400 animate-pulse">{t('app.saving')}</span>
+              <span className="text-xs text-gray-400 dark:text-slate-500 animate-pulse">{t('app.saving')}</span>
             )}
             {savingCount === 0 && dirtyCount === 0 && rows.length > 0 && (
               <span className="text-xs text-green-600">✓ {t('app.saved')}</span>

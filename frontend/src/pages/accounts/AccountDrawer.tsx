@@ -89,20 +89,20 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
 
       {/* Modal — centered */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col pointer-events-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col pointer-events-auto">
         {/* Header */}
-        <div className='flex items-start justify-between px-5 py-4 border-b border-gray-200 rounded-t-2xl'>
+        <div className='flex items-start justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl'>
           <div className='flex-1 min-w-0'>
             {loadingAccount ? (
-              <div className='h-6 w-40 bg-gray-200 rounded animate-pulse' />
+              <div className='h-6 w-40 bg-gray-200 dark:bg-slate-700 rounded animate-pulse' />
             ) : (
               <>
-                <h2 className='text-base font-bold text-gray-900 truncate'>
+                <h2 className='text-base font-bold text-gray-900 dark:text-slate-100 truncate'>
                   {account?.name ?? '—'}
                 </h2>
                 <div className='mt-1 flex items-center gap-2'>
                   {account && (
-                    <span className='text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full'>
+                    <span className='text-xs text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full'>
                       {t(`accounts.types.${account.type}`)}
                     </span>
                   )}
@@ -120,7 +120,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
           </div>
           <button
             onClick={onClose}
-            className='ms-3 text-gray-400 hover:text-gray-600 text-xl leading-none'
+            className='ms-3 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-xl leading-none'
             aria-label='close'
           >
             ✕
@@ -134,7 +134,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className='h-4 bg-gray-100 rounded animate-pulse'
+                  className='h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse'
                   style={{ width: `${60 + i * 10}%` }}
                 />
               ))}
@@ -153,7 +153,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
                   <Row label={t('app.notes')} value={account.notes} multiline />
                 )}
                 {!account.phone && !account.address && !account.notes && (
-                  <p className='text-sm text-gray-400'>—</p>
+                  <p className='text-sm text-gray-400 dark:text-slate-500'>—</p>
                 )}
               </section>
 
@@ -195,7 +195,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
                       )}
                     </div>
                   ) : (
-                    <p className='text-sm text-gray-400'>—</p>
+                    <p className='text-sm text-gray-400 dark:text-slate-500'>—</p>
                   )}
                 </section>
               )}
@@ -205,7 +205,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
 
         {/* Footer actions */}
         {account && (
-          <div className='px-5 py-4 border-t border-gray-200 flex gap-3 rounded-b-2xl'>
+          <div className='px-5 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3 rounded-b-2xl'>
             {onEdit && (
               <button
                 onClick={() => { onClose(); onEdit(account.id); }}
@@ -220,7 +220,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
                   onClose();
                   navigate(`/payments/new?customerId=${account.id}`);
                 }}
-                className='flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium'
+                className='flex-1 px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg font-medium'
               >
                 {t('payments.new')}
               </button>
@@ -244,11 +244,11 @@ function Row({
 }) {
   return (
     <div>
-      <p className='text-xs text-gray-500 mb-0.5'>{label}</p>
+      <p className='text-xs text-gray-500 dark:text-slate-400 mb-0.5'>{label}</p>
       {multiline ? (
-        <p className='text-sm text-gray-800 whitespace-pre-wrap'>{value}</p>
+        <p className='text-sm text-gray-800 dark:text-slate-200 whitespace-pre-wrap'>{value}</p>
       ) : (
-        <p className='text-sm text-gray-800'>{value}</p>
+        <p className='text-sm text-gray-800 dark:text-slate-200'>{value}</p>
       )}
     </div>
   );
@@ -266,8 +266,8 @@ function BalanceRow({
   currency?: string;
 }) {
   return (
-    <div className='flex items-center justify-between py-1.5 px-3 rounded-lg bg-gray-50'>
-      <span className='text-sm text-gray-600'>{label}</span>
+    <div className='flex items-center justify-between py-1.5 px-3 rounded-lg bg-gray-50 dark:bg-slate-800'>
+      <span className='text-sm text-gray-600 dark:text-slate-400'>{label}</span>
       <span
         className={`text-sm font-semibold ${isDebt ? 'text-red-600' : 'text-green-600'}`}
       >

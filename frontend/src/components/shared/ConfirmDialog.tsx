@@ -46,18 +46,18 @@ export default function ConfirmDialog({
       onClick={() => { if (!loading) onCancel() }}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl w-full overflow-hidden ${items && items.length > 1 ? 'max-w-md' : 'max-w-sm'}`}
+        className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full overflow-hidden ${items && items.length > 1 ? 'max-w-md' : 'max-w-sm'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-base ${styles.iconBg} ${styles.iconColor}`}>
             {styles.icon}
           </div>
-          <h2 className="flex-1 text-base font-bold text-gray-900">{title}</h2>
+          <h2 className="flex-1 text-base font-bold text-gray-900 dark:text-slate-100">{title}</h2>
           <button
             onClick={() => { if (!loading) onCancel() }}
-            className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-xl leading-none cursor-pointer shrink-0"
+            className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-xl leading-none cursor-pointer shrink-0"
             aria-label="close"
           >
             ×
@@ -66,18 +66,18 @@ export default function ConfirmDialog({
 
         {/* Body */}
         <div className="px-5 py-5 space-y-3">
-          <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
+          <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">{message}</p>
           {itemName && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-              <span className="text-sm font-semibold text-gray-800" dir="auto">{itemName}</span>
+            <div className="bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2">
+              <span className="text-sm font-semibold text-gray-800 dark:text-slate-200" dir="auto">{itemName}</span>
             </div>
           )}
           {items && items.length > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-44 overflow-y-auto">
+            <div className="bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg divide-y divide-gray-100 dark:divide-slate-600 max-h-44 overflow-y-auto">
               {items.map((name, i) => (
                 <div key={i} className="px-3 py-2 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                  <span className="text-sm text-gray-700" dir="auto">{name}</span>
+                  <span className="text-sm text-gray-700 dark:text-slate-300" dir="auto">{name}</span>
                 </div>
               ))}
             </div>
@@ -85,11 +85,11 @@ export default function ConfirmDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-3">
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-slate-700 flex justify-end gap-3">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 cursor-pointer"
           >
             {t('app.cancel')}
           </button>

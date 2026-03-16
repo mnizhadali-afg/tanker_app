@@ -114,7 +114,7 @@ export default function PaymentsListPage() {
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
-        <h1 className='text-xl font-bold text-gray-900'>{t('payments.title')}</h1>
+        <h1 className='text-xl font-bold text-gray-900 dark:text-slate-100'>{t('payments.title')}</h1>
         <button
           onClick={() => setModalId('new')}
           className='bg-success-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer'
@@ -124,7 +124,7 @@ export default function PaymentsListPage() {
       </div>
 
       {deleteError && (
-        <p className='text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2'>
+        <p className='text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-2'>
           {deleteError}
         </p>
       )}
@@ -133,7 +133,7 @@ export default function PaymentsListPage() {
         {/* Left: filter pills OR selection indicator */}
         {selectedIds.size > 0 ? (
           <div className='flex items-center gap-2'>
-            <span className='inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 bg-primary-50 border border-primary-200 px-3 py-1.5 rounded-full'>
+            <span className='inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 px-3 py-1.5 rounded-full'>
               <svg className='w-3.5 h-3.5' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2.5}>
                 <path strokeLinecap='round' strokeLinejoin='round' d='M5 13l4 4L19 7' />
               </svg>
@@ -141,7 +141,7 @@ export default function PaymentsListPage() {
             </span>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className='text-sm text-gray-400 hover:text-gray-600 cursor-pointer transition-colors'
+              className='text-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 cursor-pointer transition-colors'
             >
               × {t('app.clearSelection')}
             </button>
@@ -155,7 +155,7 @@ export default function PaymentsListPage() {
                 className={`text-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                   typeFilter === type
                     ? 'bg-gray-600 text-white border-gray-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
               >
                 {type ? t(`payments.types.${type}`) : t('app.all')}
@@ -181,7 +181,7 @@ export default function PaymentsListPage() {
             <svg className='absolute inset-s-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2}>
               <path strokeLinecap='round' strokeLinejoin='round' d='M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z' />
             </svg>
-            <input type='text' value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`${t('app.search')}…`} className='w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white' />
+            <input type='text' value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`${t('app.search')}…`} className='w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100' />
           </div>
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function PaymentsListPage() {
         <DetailModal
           title={t(`payments.types.${detailRow.type}`)}
           subtitle={
-            <span className='text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full'>
+            <span className='text-xs text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full'>
               {t(`payments.levels.${detailRow.linkedLevel}`)}
             </span>
           }

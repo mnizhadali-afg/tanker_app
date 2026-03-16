@@ -133,7 +133,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
     } finally { setSaving(false) }
   }
 
-  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+  const inputClass = "w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100"
 
   const formBody = (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -141,13 +141,13 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.type')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.type')}</label>
           <select value={paymentType} onChange={(e) => setPaymentType(e.target.value as typeof PAYMENT_TYPES[number])} className={inputClass}>
             {PAYMENT_TYPES.map((pt) => <option key={pt} value={pt}>{t(`payments.types.${pt}`)}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.level')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.level')}</label>
           <select value={level} onChange={(e) => setLevel(e.target.value as typeof LEVELS[number])} className={inputClass}>
             {LEVELS.map((l) => <option key={l} value={l}>{t(`payments.levels.${l}`)}</option>)}
           </select>
@@ -156,7 +156,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.payer')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.payer')}</label>
           <SearchableSelect
             options={accounts.map((a) => ({ value: a.id, label: `${a.name} (${t(`accounts.types.${a.type}`)})` }))}
             value={payerAccountId}
@@ -165,7 +165,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.payee')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.payee')}</label>
           <SearchableSelect
             options={accounts.map((a) => ({ value: a.id, label: `${a.name} (${t(`accounts.types.${a.type}`)})` }))}
             value={payeeAccountId}
@@ -177,7 +177,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       {!isAccountLevel && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('accounts.types.customer')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('accounts.types.customer')}</label>
           <SearchableSelect
             options={customers.map((c) => ({ value: c.id, label: c.name }))}
             value={customerId}
@@ -190,7 +190,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       {(level === 'contract' || level === 'invoice') && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.contract')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('invoices.contract')}</label>
           <SearchableSelect
             options={contracts.map((c) => ({ value: c.id, label: c.code }))}
             value={contractId}
@@ -202,7 +202,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       {level === 'invoice' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('invoices.title')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('invoices.title')}</label>
           <SearchableSelect
             options={invoices.map((inv) => ({ value: inv.id, label: inv.invoiceNumber }))}
             value={invoiceId}
@@ -214,7 +214,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       {/* Optional monetary account */}
       <div className="space-y-2">
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none w-fit">
+        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400 cursor-pointer select-none w-fit">
           <input
             type="checkbox"
             checked={showMonetaryAccount}
@@ -238,18 +238,18 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.amountAfn')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.amountAfn')}</label>
           <input type="number" value={amountAfn} onChange={(e) => setAmountAfn(e.target.value)} className={inputClass} step="any" min="0" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.amountUsd')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.amountUsd')}</label>
           <input type="number" value={amountUsd} onChange={(e) => setAmountUsd(e.target.value)} className={inputClass} step="any" min="0" />
         </div>
       </div>
 
       {paymentType === 'exchange' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('payments.exchangeRate')}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('payments.exchangeRate')}</label>
           <input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} className={inputClass} step="any" min="0" />
         </div>
       )}
@@ -265,7 +265,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
       </div>
 
       <div className="flex gap-3 justify-end">
-        <button type="button" onClick={cancel} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 cursor-pointer">{t('app.cancel')}</button>
+        <button type="button" onClick={cancel} className="px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer">{t('app.cancel')}</button>
         <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
           {saving ? t('app.loading') : t('app.save')}
         </button>
@@ -278,10 +278,10 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
   return (
     <div className="max-w-xl space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={cancel} className="text-sm text-gray-500 hover:text-gray-700">← {t('app.back')}</button>
-        <h1 className="text-xl font-bold text-gray-900">{isEdit ? t('app.edit') : t('payments.new')}</h1>
+        <button onClick={cancel} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300">← {t('app.back')}</button>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">{isEdit ? t('app.edit') : t('payments.new')}</h1>
       </div>
-      <div className="bg-white border border-gray-200 rounded-xl p-6">{formBody}</div>
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6">{formBody}</div>
     </div>
   )
 }

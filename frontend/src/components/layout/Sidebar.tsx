@@ -30,9 +30,9 @@ export default function Sidebar() {
   )
 
   return (
-    <aside className="w-56 shrink-0 bg-white border-e border-gray-200 flex flex-col">
-      <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
-        <span className="text-primary-700 font-bold text-sm text-center leading-tight">
+    <aside className="w-56 shrink-0 bg-white dark:bg-slate-800 border-e border-gray-200 dark:border-slate-700 flex flex-col">
+      <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-slate-700 px-4">
+        <span className="text-primary-700 dark:text-primary-400 font-bold text-sm text-center leading-tight">
           {t('app.title')}
         </span>
       </div>
@@ -44,8 +44,8 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                 isActive
-                  ? 'bg-primary-50 text-primary-700 font-medium border-s-2 border-primary-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium border-s-2 border-primary-600'
+                  : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100'
               }`
             }
           >

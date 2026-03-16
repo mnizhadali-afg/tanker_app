@@ -57,20 +57,20 @@ export default function TransactionHistoryReport() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-gray-900">{t('reports.transactionHistory')}</h2>
+      <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">{t('reports.transactionHistory')}</h2>
 
       <div className="flex items-end justify-between gap-4">
         <div className="flex gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('reports.dateFrom')}</label>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('reports.dateFrom')}</label>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('reports.dateTo')}</label>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t('reports.dateTo')}</label>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100" />
           </div>
           {(dateFrom || dateTo) && (
-            <button onClick={() => { setDateFrom(''); setDateTo('') }} className="text-sm text-gray-500 hover:text-gray-700 pb-0.5 cursor-pointer">
+            <button onClick={() => { setDateFrom(''); setDateTo('') }} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 pb-0.5 cursor-pointer">
               × {t('app.cancel')}
             </button>
           )}
@@ -84,7 +84,7 @@ export default function TransactionHistoryReport() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`${t('app.search')}…`}
-            className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+            className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
       </div>

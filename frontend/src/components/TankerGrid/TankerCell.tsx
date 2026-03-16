@@ -37,10 +37,10 @@ const TankerCell = memo(function TankerCell({
   const baseClass = [
     'h-8 w-full border-0 text-xs px-1.5 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400',
     readOnly
-      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+      ? 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 cursor-not-allowed'
       : isOverride
-        ? 'bg-amber-50'
-        : 'bg-white',
+        ? 'bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-slate-100'
+        : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100',
   ].join(' ')
 
   const dataAttrs = {

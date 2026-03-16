@@ -23,9 +23,9 @@ export default function InvoiceStatusBar({
   const locale = i18n.language
 
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-white border border-gray-200 rounded-lg px-4 py-3">
-      <div className="text-sm font-mono text-gray-700">{invoiceNumber}</div>
-      <div className="text-sm text-gray-500">{formatDate(issueDate, locale)}</div>
+    <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-3">
+      <div className="text-sm font-mono text-gray-700 dark:text-slate-300">{invoiceNumber}</div>
+      <div className="text-sm text-gray-500 dark:text-slate-400">{formatDate(issueDate, locale)}</div>
       <StatusBadge status={status} label={t(`invoices.statuses.${status}`)} />
 
       <div className="flex-1" />
@@ -41,7 +41,7 @@ export default function InvoiceStatusBar({
       {status === 'draft' && onCancel && (
         <button
           onClick={onCancel}
-          className="text-sm px-4 py-1.5 bg-white border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+          className="text-sm px-4 py-1.5 bg-white dark:bg-slate-800 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
         >
           {t('invoices.cancel')}
         </button>

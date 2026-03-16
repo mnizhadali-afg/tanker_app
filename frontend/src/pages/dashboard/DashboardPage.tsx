@@ -71,13 +71,13 @@ function FilterDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute z-20 inset-e-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+        <div className="absolute z-20 inset-e-0 mt-1 w-36 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg py-1">
           {options.map((opt) => (
             <button
               key={opt.value}
               onClick={() => { onChange(opt.value); setOpen(false) }}
-              className={`w-full text-start px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors ${
-                value === opt.value ? 'text-primary-600 font-medium' : 'text-gray-700'
+              className={`w-full text-start px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${
+                value === opt.value ? 'text-primary-600 font-medium' : 'text-gray-700 dark:text-slate-300'
               }`}
             >
               {opt.label}
@@ -125,45 +125,45 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">{t('nav.dashboard')}</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">{t('nav.dashboard')}</h1>
 
       {/* Balance summary cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500 mb-1">{t('reports.balanceAfn')}</p>
+        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5">
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">{t('reports.balanceAfn')}</p>
           <p className={`text-2xl font-bold ${data && data.totalBalanceAfn > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {data ? formatNumber(data.totalBalanceAfn, locale) : '—'} <span className="text-sm font-normal text-gray-500">{t('currency.afn')}</span>
+            {data ? formatNumber(data.totalBalanceAfn, locale) : '—'} <span className="text-sm font-normal text-gray-500 dark:text-slate-400">{t('currency.afn')}</span>
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500 mb-1">{t('reports.balanceUsd')}</p>
+        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5">
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">{t('reports.balanceUsd')}</p>
           <p className={`text-2xl font-bold ${data && data.totalBalanceUsd > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {data ? formatNumber(data.totalBalanceUsd, locale) : '—'} <span className="text-sm font-normal text-gray-500">{t('currency.usd')}</span>
+            {data ? formatNumber(data.totalBalanceUsd, locale) : '—'} <span className="text-sm font-normal text-gray-500 dark:text-slate-400">{t('currency.usd')}</span>
           </p>
         </div>
       </div>
 
       {/* Recent invoices */}
-      <div className="bg-white border border-gray-200 rounded-xl">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">{t('invoices.title')}</h2>
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-slate-700">
+          <h2 className="font-semibold text-gray-800 dark:text-slate-200">{t('invoices.title')}</h2>
           <FilterDropdown options={invoiceOptions} value={invoiceFilter} onChange={setInvoiceFilter} />
         </div>
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-gray-50 dark:divide-slate-700">
           {filteredInvoices.length === 0 && (
-            <p className="px-5 py-4 text-sm text-gray-400 text-center">—</p>
+            <p className="px-5 py-4 text-sm text-gray-400 dark:text-slate-500 text-center">—</p>
           )}
           {filteredInvoices.map((inv) => (
             <button
               key={inv.id}
               onClick={() => navigate(`/invoices/${inv.id}`)}
-              className="w-full flex items-center gap-4 px-5 py-3 hover:bg-gray-50 text-start transition-colors"
+              className="w-full flex items-center gap-4 px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 text-start transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{inv.invoiceNumber}</p>
-                <p className="text-xs text-gray-500">{inv.customer.name}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">{inv.invoiceNumber}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{inv.customer.name}</p>
               </div>
-              <div className="text-xs text-gray-400">{formatDate(inv.issueDate, locale)}</div>
+              <div className="text-xs text-gray-400 dark:text-slate-500">{formatDate(inv.issueDate, locale)}</div>
               <StatusBadge status={inv.status} label={t(`invoices.statuses.${inv.status}`)} />
             </button>
           ))}
@@ -171,26 +171,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent payments */}
-      <div className="bg-white border border-gray-200 rounded-xl">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">{t('payments.title')}</h2>
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-slate-700">
+          <h2 className="font-semibold text-gray-800 dark:text-slate-200">{t('payments.title')}</h2>
           <FilterDropdown options={paymentOptions} value={paymentFilter} onChange={setPaymentFilter} />
         </div>
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-gray-50 dark:divide-slate-700">
           {filteredPayments.length === 0 && (
-            <p className="px-5 py-4 text-sm text-gray-400 text-center">—</p>
+            <p className="px-5 py-4 text-sm text-gray-400 dark:text-slate-500 text-center">—</p>
           )}
           {filteredPayments.map((pmt) => (
             <div key={pmt.id} className="flex items-center gap-4 px-5 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{t(`payments.types.${pmt.type}`)}</p>
-                <p className="text-xs text-gray-500">{pmt.customer?.name ?? '—'}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{t(`payments.types.${pmt.type}`)}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{pmt.customer?.name ?? '—'}</p>
               </div>
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-700 dark:text-slate-300">
                 {pmt.amountAfn ? formatNumber(pmt.amountAfn, locale) + ' ' + t('currency.afn') : ''}
                 {pmt.amountUsd ? formatNumber(pmt.amountUsd, locale) + ' ' + t('currency.usd') : ''}
               </div>
-              <div className="text-xs text-gray-400">{formatDate(pmt.transactionDate, locale)}</div>
+              <div className="text-xs text-gray-400 dark:text-slate-500">{formatDate(pmt.transactionDate, locale)}</div>
             </div>
           ))}
         </div>

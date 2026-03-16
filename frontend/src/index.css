@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Vazirmatn', 'Inter', system-ui, sans-serif;
   --font-en: 'Inter', system-ui, sans-serif;
@@ -44,6 +46,18 @@ body {
   background-color: #f9fafb;
   color: #111827;
   line-height: 1.6;
+}
+
+.dark body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
 }
 
 button:not(:disabled),
