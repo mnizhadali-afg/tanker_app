@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-200">
+          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-200 glow-icon-blue">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="1" y="3" width="15" height="13" rx="1" />
               <path d="M16 8h4l3 3v5h-7V8z" />
@@ -182,7 +182,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors shadow-md shadow-blue-200 cursor-pointer mt-1"
+              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-md shadow-blue-300 glow-btn-primary cursor-pointer mt-1"
             >
               {loading ? t('app.loading') : activeTab === 'signin' ? t('auth.loginButton') : t('auth.registerTab')}
             </button>
