@@ -1,3 +1,4 @@
+import { extractApiError } from '../../utils/formatting';
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -48,8 +49,7 @@ export default function AccountFormPage({ formId, onSuccess, onCancel }: Props =
       else await api.post('/accounts', { name, type, phone, address, notes })
       done()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(typeof msg === 'string' ? msg : t('errors.serverError'))
+      setError(t(extractApiError(err)))
     } finally { setSaving(false) }
   }
 

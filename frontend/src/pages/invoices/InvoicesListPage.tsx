@@ -6,7 +6,7 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import Modal from '../../components/shared/Modal';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import InvoiceFormPage from './InvoiceFormPage';
-import { formatDate, formatNumber } from '../../utils/formatting';
+import { formatDate, formatNumber, extractApiError } from '../../utils/formatting';
 import api from '../../lib/axios';
 
 interface Invoice {
@@ -246,9 +246,7 @@ export default function InvoicesListPage() {
       setInvoices((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
     } finally {
       setActionLoading(false);
     }

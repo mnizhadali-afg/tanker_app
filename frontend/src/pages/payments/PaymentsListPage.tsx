@@ -5,7 +5,7 @@ import Modal from '../../components/shared/Modal';
 import DetailModal from '../../components/shared/DetailModal';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PaymentFormPage from './PaymentFormPage';
-import { formatDate, formatNumber } from '../../utils/formatting';
+import { formatDate, formatNumber, extractApiError } from '../../utils/formatting';
 import api from '../../lib/axios';
 
 
@@ -64,8 +64,7 @@ export default function PaymentsListPage() {
       setPayments((prev) => prev.filter((p) => p.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
       setPendingDelete(null);
     } finally { setDeleting(false); }
   };
@@ -79,8 +78,7 @@ export default function PaymentsListPage() {
       setSelectedIds(new Set());
       setShowBulkDelete(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
       setShowBulkDelete(false);
     } finally { setBulkDeleting(false); }
   };

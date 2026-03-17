@@ -61,7 +61,13 @@
     "payments": "پرداخت‌ها",
     "reports": "گزارش‌ها",
     "users": "کاربران",
-    "settings": "تنظیمات"
+    "settings": "تنظیمات",
+    "group": {
+      "data": "داده‌ها",
+      "operations": "عملیات",
+      "analytics": "تحلیل",
+      "system": "سیستم"
+    }
   },
   "accounts": {
     "title": "حساب‌ها",
@@ -186,12 +192,15 @@
       "commodityPercentDebt": "فیصدی جنسی"
     },
     "groups": {
+      "info": "مشخصات",
+      "weight": "وزن و ارز",
       "shared": "هزینه‌های مشترک",
       "customerAfn": "مشتری (افغانی)",
       "producerAfn": "محصول‌کننده (افغانی)",
       "customerUsd": "مشتری (دلار)",
       "producerUsd": "محصول‌کننده (دلار)",
-      "perTon": "فی‌تن"
+      "perTon": "فی‌تن",
+      "result": "نتیجه"
     },
     "ratePerTonAfn": "نرخ فی‌تن (افغانی)",
     "ratePerTonUsd": "نرخ فی‌تن (دلار)",
@@ -263,7 +272,12 @@
     "invalidEmail": "ایمیل معتبر نیست",
     "serverError": "خطای سرور. لطفاً دوباره تلاش کنید",
     "notFound": "مورد مورد نظر یافت نشد",
-    "forbidden": "دسترسی ندارید"
+    "forbidden": "دسترسی ندارید",
+    "invoiceNotDraft": "فقط فاکتورهای پیش‌نویس را می‌توان نهایی کرد",
+    "invoiceAlreadyCanceled": "فاکتور قبلاً لغو شده است",
+    "invoiceImmutableFinal": "فاکتورهای نهایی شده قابل ویرایش نیستند",
+    "invoiceImmutableCanceled": "فاکتورهای لغو شده قابل ویرایش نیستند",
+    "inactiveContract": "ایجاد فاکتور برای قرارداد غیرفعال امکان‌پذیر نیست"
   },
   "pagination": {
     "page": "صفحه",

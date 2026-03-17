@@ -1,3 +1,4 @@
+import { extractApiError } from '../../utils/formatting';
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -42,8 +43,7 @@ export default function InvoiceFormPage({ onSuccess, onCancel }: Props = {}) {
       if (onSuccess) onSuccess(data.id)
       else navigate(`/invoices/${data.id}`)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(typeof msg === 'string' ? msg : t('errors.serverError'))
+      setError(t(extractApiError(err)))
     } finally { setSaving(false) }
   }
 

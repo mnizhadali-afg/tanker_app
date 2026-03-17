@@ -21,6 +21,17 @@ export function formatNumber(
   return locale === 'fa' ? toPersianDigits(formatted) : formatted
 }
 
+// Extract a translated error message from an API error.
+// If the backend returned an i18n key (e.g. "errors.invoiceNotDraft"),
+// the caller should pass it through t(). This helper returns the raw key so
+// the component can do: t(extractApiError(err)) — i18next will translate
+// known keys and return the key itself as a fallback for unknown ones.
+export function extractApiError(err: unknown): string {
+  const msg = (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message
+  if (typeof msg === 'string' && msg.length > 0) return msg
+  return 'errors.serverError'
+}
+
 export function formatDate(
   value: string | Date | null | undefined,
   locale: string,

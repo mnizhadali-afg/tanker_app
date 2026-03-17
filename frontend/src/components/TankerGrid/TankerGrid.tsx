@@ -102,12 +102,15 @@ interface Props {
 
 // Column groups for visual separators
 const GROUP_LABELS: Record<string, string> = {
+  info: 'tankers.groups.info',
+  weight: 'tankers.groups.weight',
   shared: 'tankers.groups.shared',
   'customer-afn': 'tankers.groups.customerAfn',
   'producer-afn': 'tankers.groups.producerAfn',
   'customer-usd': 'tankers.groups.customerUsd',
   'producer-usd': 'tankers.groups.producerUsd',
   'per-ton': 'tankers.groups.perTon',
+  result: 'tankers.groups.result',
 }
 
 // Per-row debounce timers: rowLocalId → timer handle
@@ -282,12 +285,15 @@ export default function TankerGrid({
               .slice(span.startIndex, span.startIndex + span.count)
               .reduce((s, c) => s + (c.width ?? 90), 0)
             const groupColors: Record<string, string> = {
+              info: 'bg-gray-50 text-gray-600 border-gray-200',
+              weight: 'bg-indigo-50 text-indigo-700 border-indigo-200',
               shared: 'bg-blue-50 text-blue-700 border-blue-200',
               'customer-afn': 'bg-green-50 text-green-700 border-green-200',
               'producer-afn': 'bg-orange-50 text-orange-700 border-orange-200',
               'customer-usd': 'bg-teal-50 text-teal-700 border-teal-200',
               'producer-usd': 'bg-purple-50 text-purple-700 border-purple-200',
               'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+              result: 'bg-rose-50 text-rose-700 border-rose-200',
             }
             const colorClass = groupColors[span.group] ?? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400'
             return (

@@ -15,23 +15,23 @@ export interface ColumnDef {
 
 export const TANKER_COLUMNS: ColumnDef[] = [
   // ── Identity ──────────────────────────────────────────────────────────────
-  { key: 'tankerNumber',  labelKey: 'tankers.tankerNumber', type: 'text',   width: 110 },
-  { key: 'entryDate',     labelKey: 'tankers.entryDate',    type: 'date',   width: 110, recalcTrigger: false },
-  { key: 'portId',        labelKey: 'tankers.port',         type: 'select', width: 140 },
-  { key: 'producerId',    labelKey: 'tankers.producer',     type: 'select', width: 140 },
-  { key: 'licenseId',     labelKey: 'tankers.license',      type: 'select', width: 140 },
+  { key: 'tankerNumber',  labelKey: 'tankers.tankerNumber', type: 'text',   width: 110, group: 'info' },
+  { key: 'entryDate',     labelKey: 'tankers.entryDate',    type: 'date',   width: 110, recalcTrigger: false, group: 'info' },
+  { key: 'portId',        labelKey: 'tankers.port',         type: 'select', width: 140, group: 'info' },
+  { key: 'producerId',    labelKey: 'tankers.producer',     type: 'select', width: 140, group: 'info' },
+  { key: 'licenseId',     labelKey: 'tankers.license',      type: 'select', width: 140, group: 'info' },
 
   // ── Weight & exchange ─────────────────────────────────────────────────────
-  { key: 'productWeight', labelKey: 'tankers.productWeight', type: 'number', width: 100, recalcTrigger: true },
-  { key: 'billWeight',    labelKey: 'tankers.billWeight',    type: 'number', width: 100, recalcTrigger: true },
+  { key: 'productWeight', labelKey: 'tankers.productWeight', type: 'number', width: 100, recalcTrigger: true, group: 'weight' },
+  { key: 'billWeight',    labelKey: 'tankers.billWeight',    type: 'number', width: 100, recalcTrigger: true, group: 'weight' },
   {
-    key: 'tonnageBasis', labelKey: 'tankers.tonnageBasis', type: 'toggle', width: 130, recalcTrigger: true,
+    key: 'tonnageBasis', labelKey: 'tankers.tonnageBasis', type: 'toggle', width: 130, recalcTrigger: true, group: 'weight',
     options: [
       { value: 'product_weight', labelKey: 'tankers.tonnageBasisOptions.product_weight' },
       { value: 'bill_weight',    labelKey: 'tankers.tonnageBasisOptions.bill_weight' },
     ],
   },
-  { key: 'exchangeRate', labelKey: 'tankers.exchangeRate', type: 'number', width: 90, recalcTrigger: true },
+  { key: 'exchangeRate', labelKey: 'tankers.exchangeRate', type: 'number', width: 90, recalcTrigger: true, group: 'weight' },
 
   // ── Shared costs ──────────────────────────────────────────────────────────
   { key: 'costProduct',        labelKey: 'tankers.costs.product',        type: 'number', width: 90,  recalcTrigger: true, group: 'shared' },
@@ -74,18 +74,18 @@ export const TANKER_COLUMNS: ColumnDef[] = [
   { key: 'costMiscUsd_producer',           labelKey: 'tankers.costs.miscUsd_p',           type: 'number', width: 80,  recalcTrigger: true, group: 'producer-usd', isProducer: true },
 
   // ── Customer-only ─────────────────────────────────────────────────────────
-  { key: 'commodityPercentDebt', labelKey: 'tankers.costs.commodityPercentDebt', type: 'number', width: 100, recalcTrigger: true },
+  { key: 'commodityPercentDebt', labelKey: 'tankers.costs.commodityPercentDebt', type: 'number', width: 100, recalcTrigger: true, group: 'customer-afn' },
 
   // ── Per-ton (hidden unless per_ton contract) ──────────────────────────────
   { key: 'ratePerTonAfn', labelKey: 'tankers.ratePerTonAfn', type: 'number', width: 100, recalcTrigger: true, group: 'per-ton' },
   { key: 'ratePerTonUsd', labelKey: 'tankers.ratePerTonUsd', type: 'number', width: 100, recalcTrigger: true, group: 'per-ton' },
 
   // ── Calculated outputs (read-only) ────────────────────────────────────────
-  { key: 'customerDebtAfn',       labelKey: 'tankers.customerDebtAfn',       type: 'number', width: 120, readOnly: true, isCalculated: true },
-  { key: 'customerDebtUsd',       labelKey: 'tankers.customerDebtUsd',       type: 'number', width: 120, readOnly: true, isCalculated: true },
-  { key: 'customerDebtCommodity', labelKey: 'tankers.customerDebtCommodity', type: 'number', width: 120, readOnly: true, isCalculated: true },
-  { key: 'producerReceivableAfn', labelKey: 'tankers.producer_col',          type: 'number', width: 120, readOnly: true, isCalculated: true, isProducer: true },
-  { key: 'producerReceivableUsd', labelKey: 'tankers.producer_col',          type: 'number', width: 120, readOnly: true, isCalculated: true, isProducer: true },
+  { key: 'customerDebtAfn',       labelKey: 'tankers.customerDebtAfn',       type: 'number', width: 120, readOnly: true, isCalculated: true, group: 'result' },
+  { key: 'customerDebtUsd',       labelKey: 'tankers.customerDebtUsd',       type: 'number', width: 120, readOnly: true, isCalculated: true, group: 'result' },
+  { key: 'customerDebtCommodity', labelKey: 'tankers.customerDebtCommodity', type: 'number', width: 120, readOnly: true, isCalculated: true, group: 'result' },
+  { key: 'producerReceivableAfn', labelKey: 'tankers.producer_col',          type: 'number', width: 120, readOnly: true, isCalculated: true, isProducer: true, group: 'result' },
+  { key: 'producerReceivableUsd', labelKey: 'tankers.producer_col',          type: 'number', width: 120, readOnly: true, isCalculated: true, isProducer: true, group: 'result' },
 ]
 
 // Columns visible by contract type

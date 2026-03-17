@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../../lib/axios'
+import { extractApiError } from '../../utils/formatting'
 import SearchableSelect from '../../components/shared/SearchableSelect'
 
 interface Account { id: string; name: string; type: string }
@@ -128,8 +129,7 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
       }
       done()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg || t('errors.serverError'))
+      setError(t(extractApiError(err)))
     } finally { setSaving(false) }
   }
 

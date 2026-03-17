@@ -5,7 +5,7 @@ import Modal from '../../components/shared/Modal';
 import DetailModal from '../../components/shared/DetailModal';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import LicenseFormPage from './LicenseFormPage';
-import { formatDate } from '../../utils/formatting';
+import { formatDate , extractApiError } from '../../utils/formatting';
 import api from '../../lib/axios';
 
 interface License {
@@ -49,8 +49,7 @@ export default function LicensesListPage() {
       setLicenses((prev) => prev.filter((l) => l.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
       setPendingDelete(null);
     } finally { setDeleting(false); }
   };
@@ -64,8 +63,7 @@ export default function LicensesListPage() {
       setSelectedIds(new Set());
       setShowBulkDelete(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
       setShowBulkDelete(false);
     } finally { setBulkDeleting(false); }
   };

@@ -1,3 +1,4 @@
+import { extractApiError } from '../../utils/formatting';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable, { type Column } from '../../components/shared/DataTable';
@@ -52,8 +53,7 @@ export default function AccountsListPage() {
       setSelectedIds(new Set());
       setShowBulkDelete(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setDeleteError(typeof msg === 'string' ? msg : t('errors.serverError'));
+      setDeleteError(t(extractApiError(err)));
       setShowBulkDelete(false);
     } finally { setBulkDeleting(false); }
   };

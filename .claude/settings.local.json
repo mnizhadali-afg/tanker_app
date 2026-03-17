@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx @nestjs/cli new backend --package-manager npm --skip-git)",
       "Bash(npm show @nestjs/config versions --json)",
-      "Bash(npx tsc --noEmit)"
+      "Bash(npx tsc --noEmit)",
+      "Bash(grep -l \"response\\\\?\\\\.data\\\\?\\\\.message\" c:/Users/mnizh/OneDrive/Desktop/tanker_app/frontend/src/pages/**/*.tsx)"
     ]
   }
 }

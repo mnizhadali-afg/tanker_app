@@ -61,7 +61,13 @@
     "payments": "Payments",
     "reports": "Reports",
     "users": "Users",
-    "settings": "Settings"
+    "settings": "Settings",
+    "group": {
+      "data": "Data",
+      "operations": "Operations",
+      "analytics": "Analytics",
+      "system": "System"
+    }
   },
   "accounts": {
     "title": "Accounts",
@@ -186,12 +192,15 @@
       "commodityPercentDebt": "Commodity % Debt"
     },
     "groups": {
+      "info": "Info",
+      "weight": "Weight & Rate",
       "shared": "Shared Costs",
       "customerAfn": "Customer (AFN)",
       "producerAfn": "Producer (AFN)",
       "customerUsd": "Customer (USD)",
       "producerUsd": "Producer (USD)",
-      "perTon": "Per Ton"
+      "perTon": "Per Ton",
+      "result": "Result"
     },
     "ratePerTonAfn": "Rate/Ton (AFN)",
     "ratePerTonUsd": "Rate/Ton (USD)",
@@ -263,7 +272,12 @@
     "invalidEmail": "Invalid email address",
     "serverError": "Server error. Please try again",
     "notFound": "Item not found",
-    "forbidden": "Access denied"
+    "forbidden": "Access denied",
+    "invoiceNotDraft": "Only draft invoices can be finalized",
+    "invoiceAlreadyCanceled": "Invoice is already canceled",
+    "invoiceImmutableFinal": "Finalized invoices are immutable",
+    "invoiceImmutableCanceled": "Canceled invoices are immutable",
+    "inactiveContract": "Cannot create invoice for an inactive contract"
   },
   "pagination": {
     "page": "Page",

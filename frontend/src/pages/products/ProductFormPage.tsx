@@ -1,3 +1,4 @@
+import { extractApiError } from '../../utils/formatting';
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -42,8 +43,7 @@ export default function ProductFormPage({ formId, onSuccess, onCancel }: Props =
       else await api.post('/products', { name, unit, notes })
       done()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(typeof msg === 'string' ? msg : t('errors.serverError'))
+      setError(t(extractApiError(err)))
     } finally { setSaving(false) }
   }
 
