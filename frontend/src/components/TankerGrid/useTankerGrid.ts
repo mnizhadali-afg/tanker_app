@@ -210,5 +210,25 @@ export function useTankerGrid(
     [contractType],
   )
 
-  return { rows, addRow, updateCell, updateCells, removeRow, markSaving, markSaved, markError, pasteRows }
+  const duplicateRow = useCallback((localId: string) => {
+    setRows((prev) => {
+      const idx = prev.findIndex((r) => r._localId === localId)
+      if (idx === -1) return prev
+      const source = prev[idx]
+      const copy: TankerRow = {
+        ...source,
+        id: undefined,          // new row — no server ID yet
+        _localId: nextLocalId(),
+        _dirty: true,
+        _saving: false,
+        _error: null,
+        _version: 0,
+      }
+      const next = [...prev]
+      next.splice(idx + 1, 0, copy)
+      return next
+    })
+  }, [])
+
+  return { rows, addRow, updateCell, updateCells, removeRow, duplicateRow, markSaving, markSaved, markError, pasteRows }
 }

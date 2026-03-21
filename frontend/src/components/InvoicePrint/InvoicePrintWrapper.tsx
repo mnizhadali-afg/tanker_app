@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { useTranslation } from 'react-i18next'
 import './invoice-print.css'
@@ -17,9 +17,10 @@ interface Invoice {
 
 interface Props {
   invoice: Invoice
+  renderTrigger?: (onPrint: () => void) => React.ReactNode
 }
 
-export default function InvoicePrintWrapper({ invoice }: Props) {
+export default function InvoicePrintWrapper({ invoice, renderTrigger }: Props) {
   const { t } = useTranslation()
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -32,12 +33,14 @@ export default function InvoicePrintWrapper({ invoice }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => handlePrint()}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-      >
-        {t('app.print')}
-      </button>
+      {renderTrigger ? renderTrigger(() => handlePrint()) : (
+        <button
+          onClick={() => handlePrint()}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          {t('app.print')}
+        </button>
+      )}
 
       {/* Print area — positioned off-screen so layout is computed but not visible.
           Do NOT use display:none — that CSS class gets copied into the print iframe

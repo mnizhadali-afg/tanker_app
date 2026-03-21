@@ -33,7 +33,8 @@ interface InvoiceDetail {
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isRtl = i18n.language === 'fa'
 
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -125,21 +126,50 @@ export default function InvoiceDetailPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/invoices')} className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300">
-          ← {t('app.back')}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/invoices')}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 transition-colors"
+        >
+          {isRtl ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          )}
+          {t('app.back')}
         </button>
         <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100 flex-1">
           {invoice.customer.name} — {invoice.contract.code}
         </h1>
-        <InvoicePrintWrapper invoice={invoiceForPrint as Parameters<typeof InvoicePrintWrapper>[0]['invoice']} />
       </div>
 
-      {/* Status bar */}
+      {/* Status bar — with print embedded as icon button */}
       <InvoiceStatusBar
         status={invoice.status}
         invoiceNumber={invoice.invoiceNumber}
         issueDate={invoice.issueDate}
+        printNode={
+          <InvoicePrintWrapper
+            invoice={invoiceForPrint as Parameters<typeof InvoicePrintWrapper>[0]['invoice']}
+            renderTrigger={(onPrint) => (
+              <button
+                onClick={onPrint}
+                title={t('app.print')}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-gray-400 dark:text-slate-500 hover:border-gray-200 hover:text-gray-600 hover:bg-gray-50 dark:hover:border-slate-600 dark:hover:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+              </button>
+            )}
+          />
+        }
         onFinalize={invoice.status === 'draft' ? () => setShowFinalize(true) : undefined}
         onCancel={invoice.status === 'draft' ? () => setShowCancel(true) : undefined}
         onDelete={invoice.status !== 'final' ? () => setShowDelete(true) : undefined}

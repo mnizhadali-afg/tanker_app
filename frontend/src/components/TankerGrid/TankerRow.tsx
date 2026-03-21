@@ -15,6 +15,7 @@ interface Props {
   onKeyDown: (e: React.KeyboardEvent, rowIndex: number, colIndex: number) => void
   onCellFocus: (colIndex: number) => void
   onDelete: (localId: string) => void
+  onDuplicate: (localId: string) => void
 }
 
 const TankerRowComponent = memo(function TankerRowComponent({
@@ -28,6 +29,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
   onKeyDown,
   onCellFocus,
   onDelete,
+  onDuplicate,
 }: Props) {
   const rowClass = [
     'flex border-b border-gray-200 dark:border-slate-700',
@@ -70,16 +72,36 @@ const TankerRowComponent = memo(function TankerRowComponent({
         )
       })}
 
-      {/* Delete button */}
+      {/* Row action buttons */}
       {!readOnly && (
-        <button
-          className="w-7 shrink-0 text-red-400 hover:text-red-600 text-sm flex items-center justify-center"
-          onClick={() => onDelete(row._localId)}
-          tabIndex={-1}
-          aria-label="Delete row"
-        >
-          ×
-        </button>
+        <div className="w-14 shrink-0 flex items-center justify-center gap-0.5">
+          {/* Duplicate */}
+          <button
+            className="w-6 h-6 flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-blue-500 dark:hover:text-blue-400 rounded transition-colors"
+            onClick={() => onDuplicate(row._localId)}
+            tabIndex={-1}
+            title="Duplicate row"
+            aria-label="Duplicate row"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+          </button>
+          {/* Delete */}
+          <button
+            className="w-6 h-6 flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
+            onClick={() => onDelete(row._localId)}
+            tabIndex={-1}
+            title="Delete row"
+            aria-label="Delete row"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* Save error indicator */}

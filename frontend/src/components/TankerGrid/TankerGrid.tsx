@@ -138,7 +138,7 @@ export default function TankerGrid({
   const columns = getVisibleColumns(contractType, true)
   const columnKeys = columns.map((c) => c.key)
 
-  const { rows, addRow, updateCell, updateCells, removeRow, markSaving, markSaved, markError, pasteRows } =
+  const { rows, addRow, updateCell, updateCells, removeRow, duplicateRow, markSaving, markSaved, markError, pasteRows } =
     useTankerGrid(initialTankers, contractType, contractDefaults)
 
   // Notify parent when rows change (for print sync)
@@ -254,6 +254,11 @@ export default function TankerGrid({
     [rows, removeRow],
   )
 
+  const handleDuplicate = useCallback(
+    (localId: string) => { duplicateRow(localId) },
+    [duplicateRow],
+  )
+
   const totalDebtAfn = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
   const totalDebtUsd = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
 
@@ -306,7 +311,7 @@ export default function TankerGrid({
               </div>
             )
           })}
-          {!readOnly && <div className="w-7 shrink-0" />}
+          {!readOnly && <div className="w-14 shrink-0" />}
         </div>
 
         {/* Column header row */}
@@ -322,7 +327,7 @@ export default function TankerGrid({
               {t(col.labelKey)}
             </div>
           ))}
-          {!readOnly && <div className="w-7 shrink-0" />}
+          {!readOnly && <div className="w-14 shrink-0" />}
         </div>
 
         {/* Rows */}
@@ -340,6 +345,7 @@ export default function TankerGrid({
               onKeyDown={handleKeyDown}
               onCellFocus={handleCellFocus}
               onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
             />
           ))}
 

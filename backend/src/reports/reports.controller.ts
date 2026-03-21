@@ -22,6 +22,16 @@ export class ReportsController {
     return this.reportsService.customerBalance(customerId)
   }
 
+  @Get('producer-balances')
+  producerBalances() {
+    return this.reportsService.producerBalances()
+  }
+
+  @Get('producer-balance/:producerId')
+  producerBalance(@Param('producerId') producerId: string) {
+    return this.reportsService.producerBalance(producerId)
+  }
+
   @Get('invoice-status')
   invoiceStatus(
     @Query('customerId') customerId?: string,

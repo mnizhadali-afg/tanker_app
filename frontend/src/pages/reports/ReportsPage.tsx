@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CustomerBalanceReport from './CustomerBalanceReport';
+import ProducerBalanceReport from './ProducerBalanceReport';
 import InvoiceStatusReport from './InvoiceStatusReport';
 import TransactionHistoryReport from './TransactionHistoryReport';
 
 const TABS = [
   'customerBalance',
+  'producerBalance',
   'invoiceStatus',
   'transactionHistory',
 ] as const;
@@ -31,6 +33,7 @@ export default function ReportsPage() {
       </div>
 
       {tab === 'customerBalance' && <CustomerBalanceReport />}
+      {tab === 'producerBalance' && <ProducerBalanceReport />}
       {tab === 'invoiceStatus' && <InvoiceStatusReport />}
       {tab === 'transactionHistory' && <TransactionHistoryReport />}
     </div>

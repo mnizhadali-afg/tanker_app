@@ -121,37 +121,142 @@ export class ReportsService {
     )
   }
 
-  async dashboard() {
-    const allBalances = await this.customerBalances()
-    const totalBalanceAfn = allBalances.reduce((s, b) => s + Number(b.balanceAfn), 0)
-    const totalBalanceUsd = allBalances.reduce((s, b) => s + Number(b.balanceUsd), 0)
-
-    const recentInvoices = await this.prisma.invoice.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: { customer: { select: { id: true, name: true } } },
+  async producerBalance(producerId: string) {
+    // Sum tanker producer receivables from Draft + Final invoices only
+    const tankerAgg = await this.prisma.tanker.aggregate({
+      where: {
+        producerId,
+        invoice: { status: { in: ['draft', 'final'] } },
+      },
+      _sum: {
+        producerReceivableAfn: true,
+        producerReceivableUsd: true,
+      },
     })
 
-    const recentPayments = await this.prisma.monetaryTransaction.findMany({
-      take: 10,
-      orderBy: { transactionDate: 'desc' },
-      include: { payer: { select: { id: true, name: true } } },
+    // Payments made TO this producer (they are the payee)
+    const paymentAgg = await this.prisma.monetaryTransaction.aggregate({
+      where: { payeeAccountId: producerId },
+      _sum: { amountAfn: true, amountUsd: true },
+    })
+
+    const totalReceivableAfn = tankerAgg._sum.producerReceivableAfn ?? new Prisma.Decimal(0)
+    const totalReceivableUsd = tankerAgg._sum.producerReceivableUsd ?? new Prisma.Decimal(0)
+    const paidAfn = paymentAgg._sum.amountAfn ?? new Prisma.Decimal(0)
+    const paidUsd = paymentAgg._sum.amountUsd ?? new Prisma.Decimal(0)
+
+    return {
+      producerId,
+      totalReceivableAfn,
+      totalReceivableUsd,
+      paidAfn,
+      paidUsd,
+      balanceAfn: totalReceivableAfn.minus(paidAfn),
+      balanceUsd: totalReceivableUsd.minus(paidUsd),
+    }
+  }
+
+  async producerBalances() {
+    const producers = await this.prisma.account.findMany({
+      where: { type: 'producer', isActive: true },
+      select: { id: true, name: true },
+    })
+    const all = await Promise.all(
+      producers.map(async (p) => {
+        const result = await this.producerBalance(p.id)
+        return { producer: p, ...result }
+      }),
+    )
+    return all.filter(
+      (r) =>
+        !r.totalReceivableAfn.isZero() ||
+        !r.totalReceivableUsd.isZero() ||
+        !r.paidAfn.isZero() ||
+        !r.paidUsd.isZero(),
+    )
+  }
+
+  async dashboard() {
+    const [allCustomerBalances, allProducerBalances] = await Promise.all([
+      this.customerBalances(),
+      this.producerBalances(),
+    ])
+
+    const totalBalanceAfn = allCustomerBalances.reduce((s, b) => s + Number(b.balanceAfn), 0)
+    const totalBalanceUsd = allCustomerBalances.reduce((s, b) => s + Number(b.balanceUsd), 0)
+    const totalProducerPayableAfn = allProducerBalances.reduce((s, b) => s + Number(b.balanceAfn), 0)
+    const totalProducerPayableUsd = allProducerBalances.reduce((s, b) => s + Number(b.balanceUsd), 0)
+
+    const topCustomers = allCustomerBalances
+      .filter((b) => Number(b.balanceAfn) > 0 || Number(b.balanceUsd) > 0)
+      .sort((a, b) => Number(b.balanceAfn) - Number(a.balanceAfn))
+      .slice(0, 6)
+      .map((b) => ({
+        id: b.customer.id,
+        name: b.customer.name,
+        balanceAfn: Number(b.balanceAfn),
+        balanceUsd: Number(b.balanceUsd),
+      }))
+
+    const topProducers = allProducerBalances
+      .filter((b) => Number(b.balanceAfn) > 0 || Number(b.balanceUsd) > 0)
+      .sort((a, b) => Number(b.balanceAfn) - Number(a.balanceAfn))
+      .slice(0, 6)
+      .map((b) => ({
+        id: b.producer.id,
+        name: b.producer.name,
+        balanceAfn: Number(b.balanceAfn),
+        balanceUsd: Number(b.balanceUsd),
+      }))
+
+    const [draftCount, finalCount, canceledCount, recentInvoices, draftInvoices, recentPayments] = await Promise.all([
+      this.prisma.invoice.count({ where: { status: 'draft' } }),
+      this.prisma.invoice.count({ where: { status: 'final' } }),
+      this.prisma.invoice.count({ where: { status: 'canceled' } }),
+      this.prisma.invoice.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: { select: { id: true, name: true } } },
+      }),
+      this.prisma.invoice.findMany({
+        where: { status: 'draft' },
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: { select: { id: true, name: true } } },
+      }),
+      this.prisma.monetaryTransaction.findMany({
+        take: 10,
+        orderBy: { transactionDate: 'desc' },
+        include: {
+          payer: { select: { id: true, name: true } },
+          payee: { select: { id: true, name: true } },
+        },
+      }),
+    ])
+
+    const mapInvoice = (inv: typeof recentInvoices[0]) => ({
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      customer: inv.customer,
+      status: inv.status,
+      issueDate: inv.issueDate,
     })
 
     return {
       totalBalanceAfn,
       totalBalanceUsd,
-      recentInvoices: recentInvoices.map((inv) => ({
-        id: inv.id,
-        invoiceNumber: inv.invoiceNumber,
-        customer: inv.customer,
-        status: inv.status,
-        issueDate: inv.issueDate,
-      })),
+      totalProducerPayableAfn,
+      totalProducerPayableUsd,
+      invoiceCounts: { draft: draftCount, final: finalCount, canceled: canceledCount },
+      topCustomers,
+      topProducers,
+      recentInvoices: recentInvoices.map(mapInvoice),
+      draftInvoices: draftInvoices.map(mapInvoice),
       recentPayments: recentPayments.map((pmt) => ({
         id: pmt.id,
         type: pmt.type,
-        customer: pmt.payer,
+        payer: pmt.payer,
+        payee: pmt.payee,
         amountAfn: pmt.amountAfn ? Number(pmt.amountAfn) : null,
         amountUsd: pmt.amountUsd ? Number(pmt.amountUsd) : null,
         transactionDate: pmt.transactionDate,

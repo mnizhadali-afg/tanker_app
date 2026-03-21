@@ -69,6 +69,20 @@
       "system": "سیستم"
     }
   },
+  "dashboard": {
+    "customerOutstanding": "بدهی کل مشتریان",
+    "customerOutstandingNote": "مجموع بدهی فعال مشتریان",
+    "producerPayable": "پرداختنی به محصول‌کننده",
+    "producerPayableNote": "مجموع پرداختنی به محصول‌کننده‌ها",
+    "invoiceStatus": "وضعیت فاکتورها",
+    "topCustomers": "برترین مشتریان بر اساس بدهی",
+    "topProducers": "برترین محصول‌کننده‌ها بر اساس پرداختنی",
+    "recentInvoices": "فاکتورهای اخیر",
+    "recentPayments": "پرداخت‌های اخیر",
+    "viewAll": "مشاهده همه",
+    "noData": "داده‌ای وجود ندارد",
+    "quickActions": "عملیات سریع"
+  },
   "accounts": {
     "title": "حساب‌ها",
     "new": "حساب جدید",
@@ -208,7 +222,7 @@
     "customerDebtUsd": "بدهی مشتری (دلار)",
     "customerDebtCommodity": "بدهی جنسی",
     "customer": "مشتری",
-    "producer_col": "تولیدکننده"
+    "producer_col": "محصول کننده"
   },
   "payments": {
     "title": "پرداخت‌ها",
@@ -238,6 +252,7 @@
   "reports": {
     "title": "گزارش‌ها",
     "customerBalance": "بیلانس مشتری",
+    "producerBalance": "بیلانس محصول‌کننده",
     "invoiceStatus": "وضعیت فاکتورها",
     "transactionHistory": "تاریخچه تراکنش‌ها",
     "balanceAfn": "بیلانس افغانی",
@@ -245,9 +260,11 @@
     "balanceCommodity": "بیلانس جنسی",
     "totalDebt": "کل بدهی",
     "totalPaid": "کل پرداخت‌شده",
+    "totalReceivable": "کل دریافتنی",
     "outstanding": "باقی‌مانده",
     "dateFrom": "از تاریخ",
-    "dateTo": "تا تاریخ"
+    "dateTo": "تا تاریخ",
+    "producerBalanceNote": "بیلانس مثبت (نارنجی) نشان‌دهنده مبلغی است که هنوز به محصول‌کننده پرداخت نشده است."
   },
   "users": {
     "title": "کاربران",

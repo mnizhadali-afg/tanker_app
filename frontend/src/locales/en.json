@@ -69,6 +69,20 @@
       "system": "System"
     }
   },
+  "dashboard": {
+    "customerOutstanding": "Total Customer Outstanding",
+    "customerOutstandingNote": "Sum of active customer balances",
+    "producerPayable": "Producer Payable",
+    "producerPayableNote": "Sum of amounts owed to producers",
+    "invoiceStatus": "Invoice Status",
+    "topCustomers": "Top Customers by Balance",
+    "topProducers": "Top Producers by Payable",
+    "recentInvoices": "Recent Invoices",
+    "recentPayments": "Recent Payments",
+    "viewAll": "View All",
+    "noData": "No data",
+    "quickActions": "Quick Actions"
+  },
   "accounts": {
     "title": "Accounts",
     "new": "New Account",
@@ -131,7 +145,7 @@
     "issueDate": "Issue Date",
     "status": "Status",
     "finalize": "Finalize",
-    "cancel": "Cancel Invoice",
+    "cancel": "Cancel",
     "finalizeConfirm": "Once finalized, this invoice cannot be edited. Are you sure?",
     "cancelConfirm": "Are you sure you want to cancel this invoice?",
     "statuses": {
@@ -238,6 +252,7 @@
   "reports": {
     "title": "Reports",
     "customerBalance": "Customer Balance",
+    "producerBalance": "Producer Balance",
     "invoiceStatus": "Invoice Status",
     "transactionHistory": "Transaction History",
     "balanceAfn": "AFN Balance",
@@ -245,9 +260,11 @@
     "balanceCommodity": "Commodity Balance",
     "totalDebt": "Total Debt",
     "totalPaid": "Total Paid",
+    "totalReceivable": "Total Receivable",
     "outstanding": "Outstanding",
     "dateFrom": "From Date",
-    "dateTo": "To Date"
+    "dateTo": "To Date",
+    "producerBalanceNote": "A positive balance (amber) means the amount still owed to the producer has not yet been paid."
   },
   "users": {
     "title": "Users",
