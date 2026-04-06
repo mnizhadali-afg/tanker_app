@@ -95,39 +95,36 @@ export default function DetailModal({
         {/* ── Structured footer ── */}
         {hasStructuredActions && (
           <>
-            {/* Lifecycle strip (delete + optional note) */}
-            {(onDelete || lifecycleNote) && (
-              <div className="px-5 pb-3">
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3 py-1.5">
-                  {lifecycleNote && (
-                    <div className="flex-1 text-xs text-amber-600 dark:text-amber-400">{lifecycleNote}</div>
-                  )}
-                  {!lifecycleNote && <div className="flex-1" />}
-                  {onDelete && (
-                    <button
-                      onClick={onDelete}
-                      disabled={deleteDisabled}
-                      title={deleteDisabled ? deleteDisabledReason : undefined}
-                      className="flex items-center gap-1.5 text-xs font-semibold py-1.5 px-2.5 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors cursor-pointer"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                      </svg>
-                      {t('app.delete')}
-                    </button>
-                  )}
+            {/* Lifecycle note (constraint warning) */}
+            {lifecycleNote && (
+              <div className="px-5 pb-2">
+                <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2">
+                  {lifecycleNote}
                 </div>
               </div>
             )}
 
-            {/* Primary CTA — Edit */}
-            {onEdit && (
-              <div className="px-3 pb-3">
+            {/* Buttons — side by side */}
+            <div className="px-3 pb-3 flex gap-2">
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  disabled={deleteDisabled}
+                  title={deleteDisabled ? deleteDisabledReason : undefined}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg>
+                  {t('app.delete')}
+                </button>
+              )}
+              {onEdit && (
                 <button
                   onClick={onEdit}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors cursor-pointer shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors cursor-pointer shadow-sm"
                 >
                   {t('app.edit')}
                   {isRtl ? (
@@ -140,8 +137,8 @@ export default function DetailModal({
                     </svg>
                   )}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
 
