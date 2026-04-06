@@ -20,7 +20,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   const switchLang = () => {
-    i18n.changeLanguage(locale === 'fa' ? 'en' : 'fa')
+    const next = locale === 'fa' ? 'en' : 'fa'
+    localStorage.setItem('lang', next)
+    i18n.changeLanguage(next)
+    document.documentElement.lang = next
+    document.documentElement.dir = next === 'fa' ? 'rtl' : 'ltr'
   }
 
   const handleSubmit = async (e: FormEvent) => {

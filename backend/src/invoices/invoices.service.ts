@@ -53,6 +53,7 @@ export class InvoicesService {
             defaultRatePerTonUsd: true,
             defaultExchangeRate: true,
             otherDefaultCosts: true,
+            notes: true,
           },
         },
         createdBy: { select: { id: true, username: true } },

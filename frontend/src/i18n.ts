@@ -10,7 +10,7 @@ i18n
       fa: { translation: fa },
       en: { translation: en },
     },
-    lng: 'fa',
+    lng: localStorage.getItem('lang') ?? 'fa',
     fallbackLng: 'fa',
     interpolation: {
       escapeValue: false,

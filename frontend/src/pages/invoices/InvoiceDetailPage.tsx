@@ -26,6 +26,7 @@ interface InvoiceDetail {
     defaultRatePerTonUsd?: number
     defaultExchangeRate?: number
     otherDefaultCosts?: Record<string, number>
+    notes?: string
   }
   tankers: TankerRow[]
 }
@@ -43,6 +44,7 @@ export default function InvoiceDetailPage() {
   const [showCancel, setShowCancel] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [noteCollapsed, setNoteCollapsed] = useState(false)
   // Live tanker rows kept in sync with TankerGrid state for print
   const [liveRows, setLiveRows] = useState<TankerRow[]>([])
 
@@ -175,11 +177,57 @@ export default function InvoiceDetailPage() {
         onDelete={invoice.status !== 'final' ? () => setShowDelete(true) : undefined}
       />
 
-      {/* Notes */}
+      {/* Invoice notes */}
       {invoice.notes && (
-        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+        <p className="text-sm text-gray-600 dark:text-slate-400 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg px-4 py-2">
           {invoice.notes}
         </p>
+      )}
+
+      {/* Contract memo — sticky note style, shown only when contract has notes */}
+      {invoice.contract.notes && (
+        <div className="relative rounded-lg overflow-hidden shadow-sm"
+             style={{ background: 'linear-gradient(135deg, #fefce8 85%, #fde68a 85%)' }}>
+
+          {/* Fold corner visual */}
+          <div className="absolute top-0 inset-e-0 w-6 h-6 pointer-events-none"
+               style={{ background: 'linear-gradient(225deg, #fbbf24 50%, transparent 50%)' }} />
+
+          {/* Pin icon */}
+          <div className="absolute top-2 inset-e-8 text-amber-500 select-none text-base leading-none">📌</div>
+
+          {/* Content */}
+          <div className="px-4 pt-3 pb-3">
+            {/* Header row */}
+            <button
+              onClick={() => setNoteCollapsed((c) => !c)}
+              className="flex items-center gap-2 w-full text-start group mb-1"
+            >
+              <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-xs font-bold text-amber-800 uppercase tracking-widest">
+                Contract Memo
+              </span>
+              <span className="text-xs text-amber-500 ms-1 font-normal normal-case tracking-normal">
+                — {invoice.contract.code}
+              </span>
+              <svg
+                className={`w-3.5 h-3.5 text-amber-500 ms-auto transition-transform duration-200 ${noteCollapsed ? 'rotate-180' : ''}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Animated body */}
+            {!noteCollapsed && (
+              <p className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap italic ms-5 border-t border-amber-200 pt-2 mt-1">
+                {invoice.contract.notes}
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
       {/* TankerGrid */}

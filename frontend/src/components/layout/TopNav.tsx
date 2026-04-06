@@ -55,6 +55,7 @@ export default function TopNav() {
   }, [])
 
   const setLang = (code: string) => {
+    localStorage.setItem('lang', code)
     i18n.changeLanguage(code)
     document.documentElement.lang = code
     document.documentElement.dir = code === 'fa' ? 'rtl' : 'ltr'

@@ -13,6 +13,13 @@ import App from './App.tsx'
   }
 })()
 
+// Init language/direction from localStorage
+;(function () {
+  const lang = localStorage.getItem('lang') ?? 'fa'
+  document.documentElement.lang = lang
+  document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr'
+})()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
