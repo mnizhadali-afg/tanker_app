@@ -177,13 +177,6 @@ export default function InvoiceDetailPage() {
         onDelete={invoice.status !== 'final' ? () => setShowDelete(true) : undefined}
       />
 
-      {/* Invoice notes */}
-      {invoice.notes && (
-        <p className="text-sm text-gray-600 dark:text-slate-400 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg px-4 py-2">
-          {invoice.notes}
-        </p>
-      )}
-
       {/* Contract memo — sticky note style, shown only when contract has notes */}
       {invoice.contract.notes && (
         <div className="relative rounded-lg overflow-hidden shadow-sm"
