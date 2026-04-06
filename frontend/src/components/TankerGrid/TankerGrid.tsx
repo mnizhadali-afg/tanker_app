@@ -137,8 +137,7 @@ export default function TankerGrid({
   const columnKeys = columns.map((c) => c.key)
 
   const {
-    rows, addRow, updateCell, updateCells, removeRow, duplicateRow,
-    markSaving, markSaved, markError, pasteRows,
+    rows, addRow, updateCell, updateCells, removeRow, duplicateRow, pasteRows,
     bulkAddRows, bulkMarkSaving, bulkMarkSaved, bulkMarkError,
   } = useTankerGrid(initialTankers, contractType, contractDefaults)
 
