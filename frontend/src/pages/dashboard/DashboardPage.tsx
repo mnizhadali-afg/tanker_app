@@ -340,32 +340,31 @@ export default function DashboardPage() {
           {data.topCustomers.length === 0 ? (
             <EmptyRow label={t('dashboard.noData')} />
           ) : (
-            data.topCustomers.map((c, i) => (
-              <div
-                key={c.id}
-                className='flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-700/50 last:border-0'
-              >
-                <span className='text-xs text-gray-300 dark:text-slate-600 w-4 shrink-0 font-mono'>
-                  {fmtCount(i + 1)}
-                </span>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-xs text-gray-700 dark:text-slate-300 truncate'>
-                    {c.name}
-                  </p>
-                  <div className='mt-1 h-1 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden'>
+            <div className='overflow-y-auto max-h-64 px-4 pt-2 pb-3 space-y-2.5'>
+              {data.topCustomers.map((c, i) => (
+                <div key={c.id}>
+                  <div className='flex items-center justify-between gap-2 mb-1'>
+                    <div className='flex items-center gap-1.5 min-w-0'>
+                      <span className='text-[10px] text-gray-300 dark:text-slate-600 font-mono shrink-0'>
+                        {fmtCount(i + 1)}
+                      </span>
+                      <p className='text-xs text-gray-700 dark:text-slate-300 truncate'>
+                        {c.name}
+                      </p>
+                    </div>
+                    <span className='text-xs font-semibold text-gray-800 dark:text-slate-200 whitespace-nowrap tabular-nums shrink-0'>
+                      {formatNumber(c.balanceAfn, locale)}
+                    </span>
+                  </div>
+                  <div className='h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden'>
                     <div
-                      className='h-full bg-rose-300 dark:bg-rose-600 rounded-full'
-                      style={{
-                        width: (c.balanceAfn / maxCustomerAfn) * 100 + '%',
-                      }}
+                      className='h-full bg-rose-300 dark:bg-rose-500 rounded-full'
+                      style={{ width: (c.balanceAfn / maxCustomerAfn) * 100 + '%' }}
                     />
                   </div>
                 </div>
-                <span className='text-xs font-semibold text-gray-800 dark:text-slate-200 whitespace-nowrap tabular-nums'>
-                  {formatNumber(c.balanceAfn, locale)}
-                </span>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </Card>
 
@@ -377,32 +376,31 @@ export default function DashboardPage() {
           {data.topProducers.length === 0 ? (
             <EmptyRow label={t('dashboard.noData')} />
           ) : (
-            data.topProducers.map((p, i) => (
-              <div
-                key={p.id}
-                className='flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-700/50 last:border-0'
-              >
-                <span className='text-xs text-gray-300 dark:text-slate-600 w-4 shrink-0 font-mono'>
-                  {fmtCount(i + 1)}
-                </span>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-xs text-gray-700 dark:text-slate-300 truncate'>
-                    {p.name}
-                  </p>
-                  <div className='mt-1 h-1 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden'>
+            <div className='overflow-y-auto max-h-64 px-4 pt-2 pb-3 space-y-2.5'>
+              {data.topProducers.map((p, i) => (
+                <div key={p.id}>
+                  <div className='flex items-center justify-between gap-2 mb-1'>
+                    <div className='flex items-center gap-1.5 min-w-0'>
+                      <span className='text-[10px] text-gray-300 dark:text-slate-600 font-mono shrink-0'>
+                        {fmtCount(i + 1)}
+                      </span>
+                      <p className='text-xs text-gray-700 dark:text-slate-300 truncate'>
+                        {p.name}
+                      </p>
+                    </div>
+                    <span className='text-xs font-semibold text-gray-800 dark:text-slate-200 whitespace-nowrap tabular-nums shrink-0'>
+                      {formatNumber(p.balanceAfn, locale)}
+                    </span>
+                  </div>
+                  <div className='h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden'>
                     <div
-                      className='h-full bg-amber-300 dark:bg-amber-600 rounded-full'
-                      style={{
-                        width: (p.balanceAfn / maxProducerAfn) * 100 + '%',
-                      }}
+                      className='h-full bg-amber-300 dark:bg-amber-500 rounded-full'
+                      style={{ width: (p.balanceAfn / maxProducerAfn) * 100 + '%' }}
                     />
                   </div>
                 </div>
-                <span className='text-xs font-semibold text-gray-800 dark:text-slate-200 whitespace-nowrap tabular-nums'>
-                  {formatNumber(p.balanceAfn, locale)}
-                </span>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </Card>
       </div>
