@@ -25,9 +25,7 @@ function InvoiceDetailModal({
   invoice,
   locale,
   onClose,
-  onEdit,
-  onView,
-  onPrint,
+  onOpen,
   onFinalize,
   onCancel,
   onDelete,
@@ -35,14 +33,15 @@ function InvoiceDetailModal({
   invoice: Invoice;
   locale: string;
   onClose: () => void;
-  onEdit: () => void;
-  onView: () => void;
-  onPrint: () => void;
+  onOpen: () => void;
   onFinalize: () => void;
   onCancel: () => void;
   onDelete: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'fa';
+  const isDraft = invoice.status === 'draft';
+  const isCanceled = invoice.status === 'canceled';
 
   // Close on Escape key
   useEffect(() => {
@@ -53,119 +52,138 @@ function InvoiceDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 w-full max-w-lg mx-4 space-y-4"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1.5">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">{invoice.invoiceNumber}</h2>
-            <StatusBadge status={invoice.status} label={t(`invoices.statuses.${invoice.status}`)} />
+        {/* ── Header band ── */}
+        <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-bold font-mono text-gray-900 dark:text-slate-100 tracking-wide">
+                {invoice.invoiceNumber}
+              </h2>
+              <StatusBadge status={invoice.status} label={t(`invoices.statuses.${invoice.status}`)} />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
+              {invoice.customer.name}
+              <span className="mx-1.5 text-gray-300 dark:text-slate-600">·</span>
+              {invoice.contract.code}
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-3xl leading-none mt-0.5 cursor-pointer w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700"
+            className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
-            ×
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
-        {/* Info grid */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.customer')}</p>
-            <p className="font-medium text-gray-900 dark:text-slate-100">{invoice.customer.name}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.contract')}</p>
-            <p className="font-medium text-gray-900 dark:text-slate-100">{invoice.contract.code}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('contracts.calculationType')}</p>
-            <p className="font-medium text-gray-900 dark:text-slate-100">
+        {/* ── Info grid ── */}
+        <div className="px-5 pb-4 grid grid-cols-3 gap-3 text-sm">
+          <div className="bg-gray-50 dark:bg-slate-700/60 rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">
+              {t('contracts.calculationType')}
+            </p>
+            <p className="font-semibold text-gray-800 dark:text-slate-200 text-xs leading-snug">
               {t(`contracts.calculationTypes.${invoice.contract.calculationType}`)}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('invoices.issueDate')}</p>
-            <p className="font-medium text-gray-900 dark:text-slate-100">{formatDate(invoice.issueDate, locale)}</p>
+          <div className="bg-gray-50 dark:bg-slate-700/60 rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">
+              {t('invoices.issueDate')}
+            </p>
+            <p className="font-semibold text-gray-800 dark:text-slate-200 text-xs">{formatDate(invoice.issueDate, locale)}</p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-0.5">{t('tankers.title')}</p>
-            <p className="font-medium text-gray-900 dark:text-slate-100">
+          <div className="bg-gray-50 dark:bg-slate-700/60 rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1">
+              {t('tankers.title')}
+            </p>
+            <p className="font-semibold text-gray-800 dark:text-slate-200 text-xs">
               {formatNumber(invoice._count.tankers, locale, 0)}
             </p>
           </div>
         </div>
 
         {invoice.notes && (
-          <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-            {invoice.notes}
-          </p>
+          <div className="px-5 pb-3">
+            <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg px-3 py-2">
+              {invoice.notes}
+            </p>
+          </div>
         )}
 
-        {/* Action buttons — left: navigation, right: state-changing */}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-slate-700">
-          {/* Left zone: Edit / View / Print */}
-          <div className="flex items-center gap-2">
-            {invoice.status === 'draft' && (
-              <button
-                onClick={onEdit}
-                className="text-sm px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
-              >
-                {t('app.edit')}
-              </button>
-            )}
-            <button
-              onClick={onView}
-              className="text-sm px-3 py-1.5 border border-gray-400 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
-            >
-              {t('app.view')}
-            </button>
-            {invoice.status === 'final' && (
-              <button
-                onClick={onPrint}
-                className="text-sm px-3 py-1.5 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6v-8z" />
-                </svg>
-                {t('app.print')}
-              </button>
-            )}
-          </div>
-
-          {/* Right zone: Finalize | Cancel | Delete */}
-          {invoice.status !== 'final' && (
-            <div className="flex items-center divide-x divide-gray-200 dark:divide-slate-700 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
-              {invoice.status === 'draft' && (
+        {/* ── Lifecycle action strip (draft / canceled only) ── */}
+        {(isDraft || isCanceled) && (
+          <div className="px-5 pb-3">
+            <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-700/50 rounded-xl p-1">
+              {isDraft && (
+                <button
+                  onClick={onFinalize}
+                  className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-2 rounded-lg text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors cursor-pointer"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {t('invoices.finalize')}
+                </button>
+              )}
+              {isDraft && (
                 <>
-                  <button
-                    onClick={onFinalize}
-                    className="text-sm px-3 py-1.5 text-green-600 hover:bg-green-50 cursor-pointer"
-                  >
-                    {t('invoices.finalize')}
-                  </button>
+                  <div className="w-px h-5 bg-gray-200 dark:bg-slate-600 shrink-0" />
                   <button
                     onClick={onCancel}
-                    className="text-sm px-3 py-1.5 text-orange-500 hover:bg-orange-50 cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-2 rounded-lg text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-colors cursor-pointer"
                   >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                    </svg>
                     {t('invoices.cancel')}
                   </button>
                 </>
               )}
+              <div className="w-px h-5 bg-gray-200 dark:bg-slate-600 shrink-0" />
               <button
                 onClick={onDelete}
-                className="text-sm px-3 py-1.5 text-red-600 hover:bg-red-50 cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-2 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
               >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                  <path d="M10 11v6M14 11v6" />
+                </svg>
                 {t('app.delete')}
               </button>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* ── Primary CTA — full-width open button ── */}
+        <div className="px-3 pb-3">
+          <button
+            onClick={onOpen}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              isDraft
+                ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
+                : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200'
+            }`}
+          >
+            {isDraft ? t('app.edit') : t('app.view')}
+            {isRtl ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -406,15 +424,7 @@ export default function InvoicesListPage() {
           invoice={detailInvoice}
           locale={locale}
           onClose={() => setDetailInvoice(null)}
-          onEdit={() => {
-            setDetailInvoice(null);
-            navigate(`/invoices/${detailInvoice.id}`);
-          }}
-          onView={() => {
-            setDetailInvoice(null);
-            navigate(`/invoices/${detailInvoice.id}`);
-          }}
-          onPrint={() => {
+          onOpen={() => {
             setDetailInvoice(null);
             navigate(`/invoices/${detailInvoice.id}`);
           }}

@@ -185,6 +185,7 @@ export default function InvoiceDetailPage() {
       {/* TankerGrid */}
       <TankerGrid
         invoiceId={invoice.id}
+        invoiceNumber={invoice.invoiceNumber}
         contractType={contractType}
         contractDefaults={contractDefaults}
         initialTankers={invoice.tankers}

@@ -117,14 +117,7 @@ export default function InvoiceStatusReport() {
             { label: t('reports.outstanding') + ' (' + t('currency.usd') + ')', value: formatNumber(Number(detailRow.totalDebtUsd) - Number(detailRow.paidUsd), locale) },
           ]}
           onClose={() => setDetailRow(null)}
-          actions={
-            <button
-              onClick={() => { setDetailRow(null); navigate(`/invoices/${detailRow.id}`); }}
-              className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer"
-            >
-              {t('app.view')}
-            </button>
-          }
+          onEdit={() => { setDetailRow(null); navigate(`/invoices/${detailRow.id}`); }}
         />
       )}
     </div>

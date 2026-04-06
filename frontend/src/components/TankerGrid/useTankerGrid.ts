@@ -210,6 +210,50 @@ export function useTankerGrid(
     [contractType],
   )
 
+  /** Add many rows at once (for import) — all marked dirty immediately */
+  const bulkAddRows = useCallback(
+    (rawRows: Array<Partial<TankerRow>>) => {
+      const newRows = rawRows.map((raw) => {
+        const row = buildEmptyRow({ ...contractDefaults, ...raw })
+        row._dirty = true
+        row._version = 1
+        return recalculateRow(row, contractType)
+      })
+      setRows((prev) => [...prev, ...newRows])
+      return newRows
+    },
+    [contractType, contractDefaults],
+  )
+
+  /** Mark multiple rows as saving in one state update (avoids N renders) */
+  const bulkMarkSaving = useCallback((localIds: Set<string>) => {
+    setRows((prev) => prev.map((r) => (localIds.has(r._localId) ? { ...r, _saving: true } : r)))
+  }, [])
+
+  /** Mark multiple rows as saved in one state update */
+  const bulkMarkSaved = useCallback(
+    (items: Array<{ localId: string; serverId: string; savedVersion: number }>) => {
+      const map = new Map(items.map((i) => [i.localId, i]))
+      setRows((prev) =>
+        prev.map((r) => {
+          const item = map.get(r._localId)
+          if (!item) return r
+          const currentVersion = (r._version as number) ?? 0
+          const stillDirty = currentVersion !== item.savedVersion
+          return { ...r, id: item.serverId, _saving: false, _error: null, _dirty: stillDirty }
+        }),
+      )
+    },
+    [],
+  )
+
+  /** Mark multiple rows with an error in one state update */
+  const bulkMarkError = useCallback((localIds: Set<string>, error: string) => {
+    setRows((prev) =>
+      prev.map((r) => (localIds.has(r._localId) ? { ...r, _saving: false, _error: error } : r)),
+    )
+  }, [])
+
   const duplicateRow = useCallback((localId: string) => {
     setRows((prev) => {
       const idx = prev.findIndex((r) => r._localId === localId)
@@ -230,5 +274,5 @@ export function useTankerGrid(
     })
   }, [])
 
-  return { rows, addRow, updateCell, updateCells, removeRow, duplicateRow, markSaving, markSaved, markError, pasteRows }
+  return { rows, addRow, updateCell, updateCells, removeRow, duplicateRow, markSaving, markSaved, markError, pasteRows, bulkAddRows, bulkMarkSaving, bulkMarkSaved, bulkMarkError }
 }

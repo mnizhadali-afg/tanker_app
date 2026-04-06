@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@n
 import { TankersService } from './tankers.service'
 import { CreateTankerDto } from './dto/create-tanker.dto'
 import { UpdateTankerDto } from './dto/update-tanker.dto'
+import { BatchSaveTankersBodyDto } from './dto/batch-save-tanker.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { Roles } from '../auth/decorators/roles.decorator'
@@ -28,6 +29,13 @@ export class TankersController {
   @Roles('admin', 'accountant', 'data_entry')
   bulkCreate(@Param('invoiceId') invoiceId: string, @Body() dtos: CreateTankerDto[]) {
     return this.tankersService.bulkCreate(invoiceId, dtos)
+  }
+
+  @Post('invoices/:invoiceId/tankers/batch-save')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'accountant', 'data_entry')
+  batchSave(@Param('invoiceId') invoiceId: string, @Body() body: BatchSaveTankersBodyDto) {
+    return this.tankersService.batchSave(invoiceId, body)
   }
 
   @Get('tankers/:id')

@@ -113,29 +113,11 @@ export default function ContractsListPage() {
             },
           ]}
           onClose={() => setDetailRow(null)}
-          actions={
-            <>
-              <div className="flex-1 flex items-center">
-                {invoiceCount !== null && invoiceCount > 0 && (
-                  <p className="text-xs text-amber-600">{t('contracts.deleteBlockedByInvoices')}</p>
-                )}
-              </div>
-              <button
-                onClick={() => { setDetailRow(null); setPendingDelete(detailRow); }}
-                disabled={invoiceCount === null || invoiceCount > 0}
-                title={invoiceCount !== null && invoiceCount > 0 ? t('contracts.deleteBlockedByInvoices') : undefined}
-                className='px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-              >
-                {t('app.delete')}
-              </button>
-              <button
-                onClick={() => { setDetailRow(null); setModalId(detailRow.id); }}
-                className='px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer'
-              >
-                {t('app.edit')}
-              </button>
-            </>
-          }
+          onEdit={() => { setDetailRow(null); setModalId(detailRow.id); }}
+          onDelete={() => { setDetailRow(null); setPendingDelete(detailRow); }}
+          deleteDisabled={invoiceCount === null || invoiceCount > 0}
+          deleteDisabledReason={invoiceCount !== null && invoiceCount > 0 ? t('contracts.deleteBlockedByInvoices') : undefined}
+          lifecycleNote={invoiceCount !== null && invoiceCount > 0 ? <>{t('contracts.deleteBlockedByInvoices')}</> : undefined}
         />
       )}
 

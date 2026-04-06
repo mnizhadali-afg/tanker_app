@@ -7,11 +7,9 @@ import { getVisibleColumns } from './columnDefs'
 import type { SelectOption } from './TankerCell'
 import api from '../../lib/axios'
 import type { CalculationType } from '@tanker/shared'
+import { exportToXlsx, exportToCsv, parseImportFile } from './useImportExport'
 
-// Explicit whitelist of every field accepted by CreateTankerDto / UpdateTankerDto.
-// Anything NOT in this set is stripped before sending to the backend.
-// This is safer than a blacklist — it handles nested objects (port/producer/license),
-// internal _* fields, calculated outputs, and unknown otherDefaultCosts keys automatically.
+// ─── DTO field whitelist ──────────────────────────────────────────────────────
 const DTO_FIELDS: Record<string, 'uuid' | 'number' | 'string' | 'date' | 'enum'> = {
   portId:         'uuid',
   producerId:     'uuid',
@@ -57,7 +55,6 @@ const DTO_FIELDS: Record<string, 'uuid' | 'number' | 'string' | 'date' | 'enum'>
   ratePerTonUsd:          'number',
 }
 
-// Required in CreateTankerDto (no @IsOptional) — must always be present with a valid value
 const REQUIRED_NUMBERS = new Set(['productWeight', 'billWeight', 'exchangeRate'])
 
 function toApiPayload(row: TankerRow): Record<string, unknown> {
@@ -65,34 +62,37 @@ function toApiPayload(row: TankerRow): Record<string, unknown> {
   for (const [k, type] of Object.entries(DTO_FIELDS)) {
     const v = (row as Record<string, unknown>)[k]
     if (type === 'uuid') {
-      // Omit UUID fields that are empty/null — @IsUUID() rejects empty strings
       if (v && v !== '') payload[k] = v
     } else if (type === 'number') {
-      // Coerce null/undefined to 0 for required fields; skip for optional ones
       if (v === null || v === undefined) {
         if (REQUIRED_NUMBERS.has(k)) payload[k] = 0
-        // else omit — @IsOptional() accepts missing field
       } else {
         payload[k] = Number(v)
       }
     } else {
-      // string, date, enum — include only if not null/undefined
       if (v !== null && v !== undefined) payload[k] = v
     }
   }
-  // Ensure all required numeric fields are always present
   for (const f of REQUIRED_NUMBERS) {
     if (!(f in payload)) payload[f] = 0
   }
   return payload
 }
 
-interface Port { id: string; name: string; producerId: string }
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+interface Port     { id: string; name: string; producerId: string }
 interface Producer { id: string; name: string }
-interface License { id: string; licenseNumber: string }
+interface License  { id: string; licenseNumber: string }
 
 interface Props {
   invoiceId: string
+  invoiceNumber?: string
   contractType: CalculationType
   contractDefaults: Partial<TankerRow>
   initialTankers: TankerRow[]
@@ -100,7 +100,14 @@ interface Props {
   onRowsChange?: (rows: TankerRow[]) => void
 }
 
-// Column groups for visual separators
+type SavePhase = 'idle' | 'saving' | 'saved' | 'error'
+interface SaveStatus {
+  phase: SavePhase
+  done: number
+  total: number
+  errorMsg?: string
+}
+
 const GROUP_LABELS: Record<string, string> = {
   info: 'tankers.groups.info',
   weight: 'tankers.groups.weight',
@@ -113,21 +120,12 @@ const GROUP_LABELS: Record<string, string> = {
   result: 'tankers.groups.result',
 }
 
-// Per-row debounce timers: rowLocalId → timer handle
-function useRowDebounce(ms: number) {
-  const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
-  return useCallback((localId: string, fn: () => void) => {
-    const existing = timers.current.get(localId)
-    if (existing) clearTimeout(existing)
-    timers.current.set(localId, setTimeout(() => {
-      timers.current.delete(localId)
-      fn()
-    }, ms))
-  }, [ms])
-}
+const BATCH_CHUNK = 25   // rows per HTTP request
+const IDLE_MS     = 4000 // ms of inactivity before auto-save fires
 
 export default function TankerGrid({
   invoiceId,
+  invoiceNumber = 'invoice',
   contractType,
   contractDefaults,
   initialTankers,
@@ -135,21 +133,22 @@ export default function TankerGrid({
   onRowsChange,
 }: Props) {
   const { t } = useTranslation()
-  const columns = getVisibleColumns(contractType, true)
+  const columns    = getVisibleColumns(contractType, true)
   const columnKeys = columns.map((c) => c.key)
 
-  const { rows, addRow, updateCell, updateCells, removeRow, duplicateRow, markSaving, markSaved, markError, pasteRows } =
-    useTankerGrid(initialTankers, contractType, contractDefaults)
+  const {
+    rows, addRow, updateCell, updateCells, removeRow, duplicateRow,
+    markSaving, markSaved, markError, pasteRows,
+    bulkAddRows, bulkMarkSaving, bulkMarkSaved, bulkMarkError,
+  } = useTankerGrid(initialTankers, contractType, contractDefaults)
 
   // Notify parent when rows change (for print sync)
-  useEffect(() => {
-    onRowsChange?.(rows)
-  }, [rows, onRowsChange])
+  useEffect(() => { onRowsChange?.(rows) }, [rows, onRowsChange])
 
-  // Load ports, producers, licenses for select dropdowns
-  const [ports, setPorts] = useState<Port[]>([])
+  // ─── Reference data ────────────────────────────────────────────────────────
+  const [ports,     setPorts]     = useState<Port[]>([])
   const [producers, setProducers] = useState<Producer[]>([])
-  const [licenses, setLicenses] = useState<License[]>([])
+  const [licenses,  setLicenses]  = useState<License[]>([])
 
   useEffect(() => {
     api.get('/ports?isActive=true').then((r) => setPorts(r.data)).catch(() => {})
@@ -158,64 +157,88 @@ export default function TankerGrid({
   }, [])
 
   const selectOptionsByKey: Record<string, SelectOption[]> = {
-    portId: ports.map((p) => ({ value: p.id, label: p.name })),
+    portId:     ports.map((p) => ({ value: p.id, label: p.name })),
     producerId: producers.map((p) => ({ value: p.id, label: p.name })),
-    licenseId: licenses.map((l) => ({ value: l.id, label: l.licenseNumber })),
+    licenseId:  licenses.map((l) => ({ value: l.id, label: l.licenseNumber })),
   }
 
-  // Save a single row to backend
-  const saveRow = useCallback(
-    async (row: TankerRow) => {
-      if (!row._dirty) return
-      const savedVersion = (row._version as number) ?? 0
-      markSaving(row._localId, true)
+  // ─── Save status ───────────────────────────────────────────────────────────
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>({ phase: 'idle', done: 0, total: 0 })
+  const rowsRef = useRef<TankerRow[]>(rows)
+  useEffect(() => { rowsRef.current = rows }, [rows])
+
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ─── Core batch save ───────────────────────────────────────────────────────
+  const runBatchSave = useCallback(async (overrideRows?: TankerRow[]) => {
+    const allRows   = overrideRows ?? rowsRef.current
+    const dirtyRows = allRows.filter((r) => r._dirty && !r._saving)
+    if (dirtyRows.length === 0) return
+
+    // Capture save-versions before any async work
+    const capturedVersions = new Map(
+      dirtyRows.map((r) => [r._localId, (r._version as number) ?? 0]),
+    )
+
+    bulkMarkSaving(new Set(dirtyRows.map((r) => r._localId)))
+    setSaveStatus({ phase: 'saving', done: 0, total: dirtyRows.length })
+
+    const chunks    = chunkArray(dirtyRows, BATCH_CHUNK)
+    let   doneCount = 0
+    const savedItems: Array<{ localId: string; serverId: string; savedVersion: number }> = []
+
+    for (const chunk of chunks) {
+      const items = chunk.map((row) => ({
+        ...toApiPayload(row),
+        ...(row.id ? { id: row.id } : {}),
+      }))
+
       try {
-        const payload = toApiPayload(row)
-        if (row.id) {
-          const { data } = await api.patch(`/tankers/${row.id}`, payload)
-          markSaved(row._localId, data.id, savedVersion)
-        } else {
-          const { data } = await api.post(`/invoices/${invoiceId}/tankers`, { ...payload, invoiceId })
-          markSaved(row._localId, data.id, savedVersion)
-        }
+        const { data } = await api.post(`/invoices/${invoiceId}/tankers/batch-save`, { rows: items })
+        ;(data as Array<{ id: string }>).forEach((saved, i) => {
+          savedItems.push({
+            localId:      chunk[i]._localId,
+            serverId:     saved.id,
+            savedVersion: capturedVersions.get(chunk[i]._localId) ?? 0,
+          })
+        })
+        doneCount += chunk.length
+        setSaveStatus({ phase: 'saving', done: doneCount, total: dirtyRows.length })
       } catch (err: unknown) {
         const errData = (err as { response?: { data?: unknown } })?.response?.data
-        console.error('[TankerGrid] Save failed — server response:', errData)
-        markError(row._localId, t('errors.serverError'))
+        console.error('[TankerGrid] Batch save failed:', errData)
+        bulkMarkError(new Set(chunk.map((r) => r._localId)), t('errors.serverError'))
+        setSaveStatus({ phase: 'error', done: doneCount, total: dirtyRows.length, errorMsg: String(errData) })
+        return
       }
-    },
-    [invoiceId, markSaving, markSaved, markError, t],
-  )
+    }
 
-  const scheduleRowSave = useRowDebounce(800)
+    bulkMarkSaved(savedItems)
+    setSaveStatus({ phase: 'saved', done: doneCount, total: dirtyRows.length })
+    setTimeout(() => setSaveStatus((s) => (s.phase === 'saved' ? { phase: 'idle', done: 0, total: 0 } : s)), 3000)
+  }, [invoiceId, bulkMarkSaving, bulkMarkSaved, bulkMarkError, t])
 
-  // Auto-save dirty rows with per-row debounce.
-  // Rules:
-  //   - Skip rows with _error (prevents infinite retry loop on 500; user must edit again to retry)
-  //   - Skip rows missing portId — it's a non-nullable FK in the DB; saving without it always 500s
+  // ─── Idle-based auto-save (resets on every row change) ────────────────────
   useEffect(() => {
-    rows.forEach((row) => {
-      const portId = (row as Record<string, unknown>).portId
-      const readyToSave = row._dirty && !row._saving && !row._error && portId && portId !== ''
-      if (readyToSave) {
-        scheduleRowSave(row._localId, () => saveRow(row))
-      }
-    })
-  }, [rows, scheduleRowSave, saveRow])
+    if (readOnly) return
+    const hasDirty = rows.some((r) => r._dirty && !r._saving)
+    if (!hasDirty) return
 
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    idleTimerRef.current = setTimeout(() => runBatchSave(), IDLE_MS)
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current) }
+  }, [rows, readOnly, runBatchSave])
 
-  // When port changes, auto-derive producerId and store the full port object in one batch update.
-  // The port object (port.name) is needed by print templates; it is stripped from API payloads.
+  // ─── Cell change handlers ──────────────────────────────────────────────────
   const handleCellChange = useCallback(
     (localId: string, key: string, value: unknown) => {
       if (key === 'portId') {
         const port = ports.find((p) => p.id === value)
         updateCells(localId, {
-          portId: value,
+          portId:    value,
           producerId: port?.producerId ?? '',
-          // Store resolved objects so print templates can access port.name / producer.name
-          port: port ? { id: port.id, name: port.name } : undefined,
-          producer: port ? { id: port.producerId, name: producers.find(p => p.id === port.producerId)?.name ?? '' } : undefined,
+          port:      port ? { id: port.id, name: port.name } : undefined,
+          producer:  port ? { id: port.producerId, name: producers.find((p) => p.id === port.producerId)?.name ?? '' } : undefined,
         })
       } else {
         updateCell(localId, key, value)
@@ -228,8 +251,8 @@ export default function TankerGrid({
 
   const { handleKeyDown } = useKeyboardNav({
     rowCount: rows.length,
-    colCount: columns.length,
-    onAddRow: readOnly ? undefined : handleAddRow,
+    colCount:  columns.length,
+    onAddRow:  readOnly ? undefined : handleAddRow,
   })
 
   const { handleCellFocus, handlePaste } = usePasteHandler((tsv, colIndex) => {
@@ -259,27 +282,83 @@ export default function TankerGrid({
     [duplicateRow],
   )
 
-  const totalDebtAfn = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
-  const totalDebtUsd = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
+  // ─── Import ───────────────────────────────────────────────────────────────
+  const importRef = useRef<HTMLInputElement>(null)
+  const [importStatus, setImportStatus] = useState<string | null>(null)
 
-  const savingCount = rows.filter((r) => r._saving).length
-  const dirtyCount = rows.filter((r) => r._dirty && !r._saving).length
+  const handleImportFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      e.target.value = '' // reset so same file can be re-selected
 
-  // Build group spans for the header
+      setImportStatus(t('app.loading') + '…')
+      try {
+        const { rows: importedRows, warnings, skipped } = await parseImportFile(file, ports, licenses)
+        if (importedRows.length === 0) {
+          setImportStatus(`No rows imported. ${warnings[0] ?? ''}`)
+          return
+        }
+
+        const added = bulkAddRows(importedRows)
+        const msg = `${importedRows.length} rows imported${skipped > 0 ? ` (${skipped} empty rows skipped)` : ''}`
+        setImportStatus(msg)
+        if (warnings.length > 0) console.warn('[Import]', warnings)
+
+        // Immediately trigger batch save for the imported rows
+        setTimeout(() => runBatchSave(rowsRef.current.concat(added)), 300)
+        setTimeout(() => setImportStatus(null), 5000)
+      } catch (err) {
+        console.error('[Import] parse failed:', err)
+        setImportStatus('Import failed — check file format.')
+        setTimeout(() => setImportStatus(null), 5000)
+      }
+    },
+    [t, ports, licenses, bulkAddRows, runBatchSave],
+  )
+
+  // ─── Export dropdown ──────────────────────────────────────────────────────
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef  = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!exportOpen) return
+    const close = (e: MouseEvent) => { if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [exportOpen])
+
+  // ─── Derived counts ───────────────────────────────────────────────────────
+  const totalDebtAfn  = rows.reduce((s, r) => s + Number(r.customerDebtAfn ?? 0), 0)
+  const totalDebtUsd  = rows.reduce((s, r) => s + Number(r.customerDebtUsd ?? 0), 0)
+  const dirtyCount    = rows.filter((r) => r._dirty && !r._saving).length
+
+  // ─── Group header spans ───────────────────────────────────────────────────
   type GroupSpan = { group: string; labelKey: string; count: number; startIndex: number }
   const groupSpans: GroupSpan[] = []
   columns.forEach((col, i) => {
-    const g = col.group ?? ''
+    const g    = col.group ?? ''
     const last = groupSpans[groupSpans.length - 1]
-    if (last && last.group === g) {
-      last.count++
-    } else {
-      groupSpans.push({ group: g, labelKey: GROUP_LABELS[g] ?? '', count: 1, startIndex: i })
-    }
+    if (last && last.group === g) { last.count++ }
+    else groupSpans.push({ group: g, labelKey: GROUP_LABELS[g] ?? '', count: 1, startIndex: i })
   })
 
+  const groupColors: Record<string, string> = {
+    info: 'bg-gray-50 text-gray-600 border-gray-200',
+    weight: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    shared: 'bg-blue-50 text-blue-700 border-blue-200',
+    'customer-afn': 'bg-green-50 text-green-700 border-green-200',
+    'producer-afn': 'bg-orange-50 text-orange-700 border-orange-200',
+    'customer-usd': 'bg-teal-50 text-teal-700 border-teal-200',
+    'producer-usd': 'bg-purple-50 text-purple-700 border-purple-200',
+    'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    result: 'bg-rose-50 text-rose-700 border-rose-200',
+  }
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
+
+      {/* Grid table */}
       <div ref={gridRef} className="overflow-x-auto" role="grid" aria-label={t('tankers.title')}>
 
         {/* Group header row */}
@@ -289,17 +368,6 @@ export default function TankerGrid({
             const totalWidth = columns
               .slice(span.startIndex, span.startIndex + span.count)
               .reduce((s, c) => s + (c.width ?? 90), 0)
-            const groupColors: Record<string, string> = {
-              info: 'bg-gray-50 text-gray-600 border-gray-200',
-              weight: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-              shared: 'bg-blue-50 text-blue-700 border-blue-200',
-              'customer-afn': 'bg-green-50 text-green-700 border-green-200',
-              'producer-afn': 'bg-orange-50 text-orange-700 border-orange-200',
-              'customer-usd': 'bg-teal-50 text-teal-700 border-teal-200',
-              'producer-usd': 'bg-purple-50 text-purple-700 border-purple-200',
-              'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-              result: 'bg-rose-50 text-rose-700 border-rose-200',
-            }
             const colorClass = groupColors[span.group] ?? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400'
             return (
               <div
@@ -330,7 +398,7 @@ export default function TankerGrid({
           {!readOnly && <div className="w-14 shrink-0" />}
         </div>
 
-        {/* Rows */}
+        {/* Data rows */}
         <div className="relative">
           {rows.map((row, rowIndex) => (
             <TankerRowComponent
@@ -378,27 +446,130 @@ export default function TankerGrid({
         )}
       </div>
 
-      {/* Toolbar */}
+      {/* ── Progress bar (visible only while saving) ── */}
+      {saveStatus.phase === 'saving' && (
+        <div className="w-full bg-gray-100 dark:bg-slate-700">
+          <div
+            className="h-1 bg-primary-500 transition-all duration-300"
+            style={{ width: saveStatus.total > 0 ? `${Math.round((saveStatus.done / saveStatus.total) * 100)}%` : '30%' }}
+          />
+        </div>
+      )}
+
+      {/* ── Import status banner ── */}
+      {importStatus && (
+        <div className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 border-t border-blue-200 text-xs text-blue-700 dark:text-blue-300">
+          {importStatus}
+        </div>
+      )}
+
+      {/* ── Toolbar ── */}
       {!readOnly && (
-        <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-3">
+        <div className="px-3 py-2 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-2 flex-wrap">
+
+          {/* Add row */}
           <button
             onClick={handleAddRow}
-            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium"
           >
             + {t('app.add')} {t('tankers.title')}
           </button>
 
+          <span className="text-xs text-gray-300 dark:text-slate-600 select-none">|</span>
+
+          {/* Import button */}
+          <div className="relative">
+            <button
+              onClick={() => importRef.current?.click()}
+              className="text-xs px-2.5 py-1 rounded border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Import
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </div>
+
+          {/* Export dropdown */}
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => setExportOpen((o) => !o)}
+              className="text-xs px-2.5 py-1 rounded border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export ▾
+            </button>
+            {exportOpen && (
+              <div className="absolute inset-s-0 bottom-full mb-1 w-40 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded shadow-lg z-50 text-xs">
+                <button
+                  className="w-full text-start px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200"
+                  onClick={() => { exportToXlsx(rows, ports, licenses, invoiceNumber); setExportOpen(false) }}
+                >
+                  📊 Excel (.xlsx)
+                </button>
+                <button
+                  className="w-full text-start px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200"
+                  onClick={() => { exportToCsv(rows, ports, licenses, invoiceNumber); setExportOpen(false) }}
+                >
+                  📄 CSV (.csv)
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Row count */}
           <span className="text-xs text-gray-400 dark:text-slate-500">
             {t('tankers.title')}: {rows.length}
           </span>
 
-              {/* Right-side auto-save status — one indicator at a time */}
-          <div className="ms-auto flex items-center">
-            {savingCount > 0 && (
-              <span className="text-xs text-gray-400 dark:text-slate-500 animate-pulse">{t('app.saving')}</span>
+          {/* ── Save status (right-aligned) ── */}
+          <div className="ms-auto flex items-center gap-2">
+            {saveStatus.phase === 'saving' && (
+              <span className="text-xs text-gray-400 dark:text-slate-500 animate-pulse flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                {saveStatus.total > 0
+                  ? `Saving ${saveStatus.done}/${saveStatus.total}…`
+                  : 'Saving…'}
+              </span>
             )}
-            {savingCount === 0 && dirtyCount === 0 && rows.length > 0 && (
-              <span className="text-xs text-green-600">✓ {t('app.saved')}</span>
+
+            {saveStatus.phase === 'saved' && (
+              <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {saveStatus.total > 0 ? `Saved ${saveStatus.total}` : 'Saved'}
+              </span>
+            )}
+
+            {saveStatus.phase === 'error' && (
+              <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                ⚠ Save failed
+                <button
+                  className="underline ms-1"
+                  onClick={() => runBatchSave()}
+                >
+                  Retry
+                </button>
+              </span>
+            )}
+
+            {saveStatus.phase === 'idle' && dirtyCount > 0 && (
+              <span className="text-xs text-amber-500 dark:text-amber-400">
+                ● {dirtyCount} unsaved
+              </span>
             )}
           </div>
         </div>

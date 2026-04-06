@@ -144,22 +144,8 @@ export default function ProductsListPage() {
             { label: t('products.unit'), value: detailRow.unit },
           ]}
           onClose={() => setDetailRow(null)}
-          actions={
-            <>
-              <button
-                onClick={() => { setDetailRow(null); setPendingDelete(detailRow) }}
-                className="px-4 py-2 text-sm border border-red-200 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-              >
-                {t('app.delete')}
-              </button>
-              <button
-                onClick={() => { setDetailRow(null); setModalId(detailRow.id) }}
-                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg cursor-pointer"
-              >
-                {t('app.edit')}
-              </button>
-            </>
-          }
+          onEdit={() => { setDetailRow(null); setModalId(detailRow.id) }}
+          onDelete={() => { setDetailRow(null); setPendingDelete(detailRow) }}
         />
       )}
 

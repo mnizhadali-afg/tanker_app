@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { InvoicesService } from '../invoices/invoices.service'
 import { CreateTankerDto } from './dto/create-tanker.dto'
 import { UpdateTankerDto } from './dto/update-tanker.dto'
+import { BatchSaveTankersBodyDto } from './dto/batch-save-tanker.dto'
 import { calculateTanker, type TankerCosts, type CalculationType } from '@tanker/shared'
 
 type ContractCalcType = 'cost_based' | 'cost_based_usd' | 'per_ton'
@@ -209,5 +210,24 @@ export class TankersService {
     this.invoicesService.assertEditable(invoice)
 
     return Promise.all(dtos.map((dto) => this.create({ ...dto, invoiceId })))
+  }
+
+  /**
+   * Batch save: create rows without an id, update rows that have an id.
+   * Each item is processed concurrently within the batch.
+   */
+  async batchSave(invoiceId: string, body: BatchSaveTankersBodyDto) {
+    const invoice = await this.invoicesService.findOne(invoiceId)
+    this.invoicesService.assertEditable(invoice)
+
+    return Promise.all(
+      body.rows.map((item) => {
+        if (item.id) {
+          return this.update(item.id, item as UpdateTankerDto)
+        } else {
+          return this.create({ ...item, invoiceId, productWeight: item.productWeight ?? 0, billWeight: item.billWeight ?? 0, exchangeRate: item.exchangeRate ?? 0 } as CreateTankerDto)
+        }
+      }),
+    )
   }
 }
