@@ -29,6 +29,7 @@ interface PaymentData {
 interface Props {
   formId?: string
   initialData?: PaymentData
+  initialCustomerId?: string
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -36,7 +37,7 @@ interface Props {
 const PAYMENT_TYPES = ['payment_in', 'payment_out', 'exchange'] as const
 const LEVELS = ['customer', 'contract', 'invoice', 'account'] as const
 
-export default function PaymentFormPage({ formId, initialData, onSuccess, onCancel }: Props = {}) {
+export default function PaymentFormPage({ formId, initialData, initialCustomerId, onSuccess, onCancel }: Props = {}) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
@@ -49,14 +50,14 @@ export default function PaymentFormPage({ formId, initialData, onSuccess, onCanc
   )
   const [level, setLevel] = useState<typeof LEVELS[number]>(
     (initialData?.linkedLevel as typeof LEVELS[number]) ??
-    (searchParams.get('customerId') ? 'customer' : 'account')
+    (searchParams.get('customerId') || initialCustomerId ? 'customer' : 'account')
   )
   const [payerAccountId, setPayerAccountId] = useState(initialData?.payerAccountId ?? '')
   const [payeeAccountId, setPayeeAccountId] = useState(initialData?.payeeAccountId ?? '')
   const [monetaryAccountId, setMonetaryAccountId] = useState(initialData?.monetaryAccountId ?? '')
   const [showMonetaryAccount, setShowMonetaryAccount] = useState(Boolean(initialData?.monetaryAccountId))
   const [customerId, setCustomerId] = useState(
-    initialData?.customerId ?? searchParams.get('customerId') ?? ''
+    initialData?.customerId ?? searchParams.get('customerId') ?? initialCustomerId ?? ''
   )
   const [contractId, setContractId] = useState(
     initialData?.contractId ?? searchParams.get('contractId') ?? ''

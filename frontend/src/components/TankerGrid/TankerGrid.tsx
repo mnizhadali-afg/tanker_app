@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useToast } from '../shared/Toast'
 import TankerRowComponent from './TankerRow'
 import { useTankerGrid, type TankerRow } from './useTankerGrid'
 import { useKeyboardNav, usePasteHandler } from './useKeyboardNav'
@@ -93,6 +94,7 @@ interface License  { id: string; licenseNumber: string }
 interface Props {
   invoiceId: string
   invoiceNumber?: string
+  customerName?: string
   contractType: CalculationType
   contractDefaults: Partial<TankerRow>
   initialTankers: TankerRow[]
@@ -126,6 +128,7 @@ const IDLE_MS     = 4000 // ms of inactivity before auto-save fires
 export default function TankerGrid({
   invoiceId,
   invoiceNumber = 'invoice',
+  customerName = '',
   contractType,
   contractDefaults,
   initialTankers,
@@ -133,6 +136,7 @@ export default function TankerGrid({
   onRowsChange,
 }: Props) {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const columns    = getVisibleColumns(contractType, true)
   const columnKeys = columns.map((c) => c.key)
 
@@ -150,10 +154,10 @@ export default function TankerGrid({
   const [licenses,  setLicenses]  = useState<License[]>([])
 
   useEffect(() => {
-    api.get('/ports?isActive=true').then((r) => setPorts(r.data)).catch(() => {})
-    api.get('/accounts?type=producer&isActive=true').then((r) => setProducers(r.data)).catch(() => {})
-    api.get('/licenses?isActive=true').then((r) => setLicenses(r.data)).catch(() => {})
-  }, [])
+    api.get('/ports?isActive=true').then((r) => setPorts(r.data)).catch(() => showToast(t('errors.loadFailed'), 'error'))
+    api.get('/accounts?type=producer&isActive=true').then((r) => setProducers(r.data)).catch(() => showToast(t('errors.loadFailed'), 'error'))
+    api.get('/licenses?isActive=true').then((r) => setLicenses(r.data)).catch(() => showToast(t('errors.loadFailed'), 'error'))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectOptionsByKey: Record<string, SelectOption[]> = {
     portId:     ports.map((p) => ({ value: p.id, label: p.name })),
@@ -186,7 +190,8 @@ export default function TankerGrid({
     let   doneCount = 0
     const savedItems: Array<{ localId: string; serverId: string; savedVersion: number }> = []
 
-    for (const chunk of chunks) {
+    for (let ci = 0; ci < chunks.length; ci++) {
+      const chunk = chunks[ci]
       const items = chunk.map((row) => ({
         ...toApiPayload(row),
         ...(row.id ? { id: row.id } : {}),
@@ -204,10 +209,12 @@ export default function TankerGrid({
         doneCount += chunk.length
         setSaveStatus({ phase: 'saving', done: doneCount, total: dirtyRows.length })
       } catch (err: unknown) {
-        const errData = (err as { response?: { data?: unknown } })?.response?.data
-        console.error('[TankerGrid] Batch save failed:', errData)
-        bulkMarkError(new Set(chunk.map((r) => r._localId)), t('errors.serverError'))
-        setSaveStatus({ phase: 'error', done: doneCount, total: dirtyRows.length, errorMsg: String(errData) })
+        const statusCode = (err as { response?: { status?: number } })?.response?.status
+        console.error('[TankerGrid] Batch save failed, status:', statusCode)
+        // Clear _saving on ALL remaining chunks (not just this one) so no row is stuck at opacity-60
+        const remainingIds = new Set(chunks.slice(ci).flatMap((c) => c.map((r) => r._localId)))
+        bulkMarkError(remainingIds, t('errors.serverError'))
+        setSaveStatus({ phase: 'error', done: doneCount, total: dirtyRows.length, errorMsg: t('errors.serverError') })
         return
       }
     }
@@ -270,10 +277,17 @@ export default function TankerGrid({
     async (localId: string) => {
       const row = rows.find((r) => r._localId === localId)
       if (!row) return
-      if (row.id) await api.delete(`/tankers/${row.id}`).catch(() => {})
+      if (row.id) {
+        try {
+          await api.delete(`/tankers/${row.id}`)
+        } catch {
+          showToast(t('errors.serverError'), 'error')
+          return
+        }
+      }
       removeRow(localId)
     },
-    [rows, removeRow],
+    [rows, removeRow, showToast, t],
   )
 
   const handleDuplicate = useCallback(
@@ -299,17 +313,16 @@ export default function TankerGrid({
           return
         }
 
-        const added = bulkAddRows(importedRows)
+        bulkAddRows(importedRows)
         const msg = `${importedRows.length} rows imported${skipped > 0 ? ` (${skipped} empty rows skipped)` : ''}`
         setImportStatus(msg)
-        if (warnings.length > 0) console.warn('[Import]', warnings)
+        if (warnings.length > 0) console.warn('[Import] parse warnings count:', warnings.length)
 
-        // Immediately trigger batch save for the imported rows
-        setTimeout(() => runBatchSave(rowsRef.current.concat(added)), 300)
+        // runBatchSave with no args — rowsRef.current will be up-to-date after React re-renders
+        setTimeout(() => runBatchSave(), 400)
         setTimeout(() => setImportStatus(null), 5000)
-      } catch (err) {
-        console.error('[Import] parse failed:', err)
-        setImportStatus('Import failed — check file format.')
+      } catch {
+        setImportStatus(t('errors.importFailed'))
         setTimeout(() => setImportStatus(null), 5000)
       }
     },
@@ -352,6 +365,15 @@ export default function TankerGrid({
     'per-ton': 'bg-yellow-50 text-yellow-700 border-yellow-200',
     result: 'bg-rose-50 text-rose-700 border-rose-200',
   }
+
+  // ─── Scroll navigator ─────────────────────────────────────────────────────
+  const NAVIGATOR_THRESHOLD = 10  // show only when there are this many rows
+  const jumpToRow = useCallback((index: number) => {
+    const container = document.getElementById(`tanker-rows-${invoiceId}`)
+    if (!container) return
+    const target = container.querySelector(`[data-row-index="${index}"]`)
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [invoiceId])
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -398,22 +420,23 @@ export default function TankerGrid({
         </div>
 
         {/* Data rows */}
-        <div className="relative">
+        <div className="relative" id={`tanker-rows-${invoiceId}`}>
           {rows.map((row, rowIndex) => (
-            <TankerRowComponent
-              key={row._localId}
-              row={row}
-              rowIndex={rowIndex}
-              columns={columns}
-              contractDefaults={contractDefaults}
-              readOnly={readOnly}
-              selectOptionsByKey={selectOptionsByKey}
-              onCellChange={handleCellChange}
-              onKeyDown={handleKeyDown}
-              onCellFocus={handleCellFocus}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-            />
+            <div key={row._localId} data-row-index={rowIndex}>
+              <TankerRowComponent
+                row={row}
+                rowIndex={rowIndex}
+                columns={columns}
+                contractDefaults={contractDefaults}
+                readOnly={readOnly}
+                selectOptionsByKey={selectOptionsByKey}
+                onCellChange={handleCellChange}
+                onKeyDown={handleKeyDown}
+                onCellFocus={handleCellFocus}
+                onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
+              />
+            </div>
           ))}
 
           {rows.length === 0 && (
@@ -485,7 +508,7 @@ export default function TankerGrid({
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              Import
+              {t('grid.import')}
             </button>
             <input
               ref={importRef}
@@ -499,8 +522,9 @@ export default function TankerGrid({
           {/* Export dropdown */}
           <div className="relative" ref={exportRef}>
             <button
-              onClick={() => setExportOpen((o) => !o)}
-              className="text-xs px-2.5 py-1 rounded border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-1"
+              onClick={() => rows.length > 0 && setExportOpen((o) => !o)}
+              disabled={rows.length === 0}
+              className="text-xs px-2.5 py-1 rounded border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -511,13 +535,13 @@ export default function TankerGrid({
               <div className="absolute inset-s-0 bottom-full mb-1 w-40 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded shadow-lg z-50 text-xs">
                 <button
                   className="w-full text-start px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200"
-                  onClick={() => { exportToXlsx(rows, ports, licenses, invoiceNumber); setExportOpen(false) }}
+                  onClick={() => { void exportToXlsx(rows, ports, licenses, customerName || invoiceNumber); setExportOpen(false) }}
                 >
                   📊 Excel (.xlsx)
                 </button>
                 <button
                   className="w-full text-start px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200"
-                  onClick={() => { exportToCsv(rows, ports, licenses, invoiceNumber); setExportOpen(false) }}
+                  onClick={() => { void exportToCsv(rows, ports, licenses, customerName || invoiceNumber); setExportOpen(false) }}
                 >
                   📄 CSV (.csv)
                 </button>
@@ -539,8 +563,8 @@ export default function TankerGrid({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
                 {saveStatus.total > 0
-                  ? `Saving ${saveStatus.done}/${saveStatus.total}…`
-                  : 'Saving…'}
+                  ? t('grid.savingProgress', { done: saveStatus.done, total: saveStatus.total })
+                  : t('grid.saving')}
               </span>
             )}
 
@@ -549,28 +573,70 @@ export default function TankerGrid({
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                {saveStatus.total > 0 ? `Saved ${saveStatus.total}` : 'Saved'}
+                {saveStatus.total > 0 ? t('grid.savedCount', { count: saveStatus.total }) : t('grid.saved')}
               </span>
             )}
 
             {saveStatus.phase === 'error' && (
               <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
-                ⚠ Save failed
+                {t('grid.saveFailed')}
                 <button
                   className="underline ms-1"
                   onClick={() => runBatchSave()}
                 >
-                  Retry
+                  {t('grid.retry')}
                 </button>
               </span>
             )}
 
             {saveStatus.phase === 'idle' && dirtyCount > 0 && (
               <span className="text-xs text-amber-500 dark:text-amber-400">
-                ● {dirtyCount} unsaved
+                {t('grid.unsaved', { count: dirtyCount })}
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Scroll navigator — floating pill, shown only when rows ≥ threshold ── */}
+      {rows.length >= NAVIGATOR_THRESHOLD && (
+        <div className="fixed inset-e-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-0.5 bg-white/90 dark:bg-slate-800/90 border border-gray-200 dark:border-slate-600 rounded-full shadow-lg py-2 px-1 backdrop-blur-sm select-none"
+             style={{ maxHeight: '60vh', overflowY: 'auto' }}
+             title="Jump to row">
+          {/* Top label */}
+          <span className="text-[9px] text-gray-400 dark:text-slate-500 font-medium mb-1 px-1">
+            {rows.length}
+          </span>
+
+          {/* One dot per row — clicking jumps to it */}
+          {rows.map((row, i) => {
+            const isError  = Boolean(row._error)
+            const isDirty  = Boolean(row._dirty && !row._saving)
+            const isSaving = Boolean(row._saving)
+            const dotColor = isError  ? 'bg-red-400'
+                           : isSaving ? 'bg-blue-300 animate-pulse'
+                           : isDirty  ? 'bg-amber-400'
+                           : 'bg-gray-300 dark:bg-slate-500'
+            return (
+              <button
+                key={row._localId}
+                onClick={() => jumpToRow(i)}
+                title={`Row ${i + 1}${isError ? ' — error' : isDirty ? ' — unsaved' : ''}`}
+                className={`w-2 h-2 rounded-full transition-all hover:scale-150 hover:bg-primary-500 shrink-0 ${dotColor}`}
+              />
+            )
+          })}
+
+          {/* Bottom arrow — scroll to last row */}
+          <button
+            onClick={() => jumpToRow(rows.length - 1)}
+            className="mt-1 text-gray-300 dark:text-slate-600 hover:text-primary-500 dark:hover:text-primary-400"
+            title="Jump to last row"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

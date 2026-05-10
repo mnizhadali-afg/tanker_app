@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
 import StatusBadge from '../../components/shared/StatusBadge';
@@ -30,11 +29,11 @@ interface Props {
   accountId: string | null;
   onClose: () => void;
   onEdit?: (id: string) => void;
+  onNewPayment?: (customerId: string) => void;
 }
 
-export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
+export default function AccountDrawer({ accountId, onClose, onEdit, onNewPayment }: Props) {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const locale = i18n.language;
   const isRtl = i18n.language === 'fa';
 
@@ -212,7 +211,7 @@ export default function AccountDrawer({ accountId, onClose, onEdit }: Props) {
                       {t('reports.customerBalance')}
                     </div>
                     <button
-                      onClick={() => { onClose(); navigate(`/payments/new?customerId=${account.id}`); }}
+                      onClick={() => onNewPayment ? onNewPayment(account.id) : undefined}
                       className="flex items-center gap-1.5 text-xs font-semibold py-1.5 px-2.5 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors cursor-pointer"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

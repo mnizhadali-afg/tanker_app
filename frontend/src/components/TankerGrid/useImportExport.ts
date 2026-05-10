@@ -76,47 +76,81 @@ function rowToExportValues(row: TankerRow, ports: Port[], licenses: License[]): 
   })
 }
 
-export function exportToXlsx(
+/** Build the default filename: `{count}_{customerName}_{DD-MM-YYYY}` */
+function buildFileName(rowCount: number, customerName: string, ext: string): string {
+  const now   = new Date()
+  const dd    = String(now.getDate()).padStart(2, '0')
+  const mm    = String(now.getMonth() + 1).padStart(2, '0')
+  const yyyy  = now.getFullYear()
+  // Sanitize customer name: strip characters invalid in filenames
+  const safeName = customerName.replace(/[\\/:*?"<>|]/g, '').trim().replace(/\s+/g, '_')
+  return `${rowCount}_${safeName}_${dd}-${mm}-${yyyy}.${ext}`
+}
+
+/** Save a Blob using the browser Save-As dialog when available, falling back to auto-download */
+async function saveWithDialog(blob: Blob, suggestedName: string, mimeType: string, ext: string) {
+  const fsApi = (window as unknown as Record<string, unknown>).showSaveFilePicker
+  if (typeof fsApi === 'function') {
+    try {
+      const handle = await (fsApi as (opts: unknown) => Promise<FileSystemFileHandle>)({
+        suggestedName,
+        types: [{ description: ext.toUpperCase() + ' file', accept: { [mimeType]: ['.' + ext] } }],
+      })
+      const writable = await handle.createWritable()
+      await writable.write(blob)
+      await writable.close()
+      return
+    } catch {
+      // User cancelled the dialog — don't fall through to auto-download
+      return
+    }
+  }
+  // Fallback: plain anchor download (no location/rename choice)
+  const url = URL.createObjectURL(blob)
+  const a   = document.createElement('a')
+  a.href     = url
+  a.download = suggestedName
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function exportToXlsx(
   rows: TankerRow[],
   ports: Port[],
   licenses: License[],
-  invoiceNumber: string,
+  customerName: string,
 ) {
-  const headers = EXPORT_COLUMNS.map((c) => c.label)
+  const headers  = EXPORT_COLUMNS.map((c) => c.label)
   const dataRows = rows.map((r) => rowToExportValues(r, ports, licenses))
   const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows])
-
-  // Column widths
   ws['!cols'] = EXPORT_COLUMNS.map((c) => ({ wch: Math.max(c.label.length + 2, 14) }))
 
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'Tankers')
-  XLSX.writeFile(wb, `tankers-${invoiceNumber}.xlsx`)
+
+  const fileName = buildFileName(rows.length, customerName, 'xlsx')
+  const buf  = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  await saveWithDialog(blob, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xlsx')
 }
 
-export function exportToCsv(
+export async function exportToCsv(
   rows: TankerRow[],
   ports: Port[],
   licenses: License[],
-  invoiceNumber: string,
+  customerName: string,
 ) {
   const escape = (v: string | number) => {
     const s = String(v)
     return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const headers = EXPORT_COLUMNS.map((c) => escape(c.label)).join(',')
-  const dataRows = rows
-    .map((r) => rowToExportValues(r, ports, licenses).map(escape).join(','))
-    .join('\n')
-  const csv = headers + '\n' + dataRows
+  const headers  = EXPORT_COLUMNS.map((c) => escape(c.label)).join(',')
+  const dataRows = rows.map((r) => rowToExportValues(r, ports, licenses).map(escape).join(',')).join('\n')
+  const csv      = headers + '\n' + dataRows
 
+  const fileName = buildFileName(rows.length, customerName, 'csv')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `tankers-${invoiceNumber}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  await saveWithDialog(blob, fileName, 'text/csv', 'csv')
 }
 
 // ─── Import ─────────────────────────────────────────────────────────────────
@@ -131,6 +165,41 @@ export interface ImportResult {
  * Parse a CSV or XLSX file and return partial TankerRow objects.
  * Port name is resolved to portId+producerId; license number to licenseId.
  */
+/** Strip BOM and whitespace from a header string for reliable matching */
+function normalizeHeader(h: string): string {
+  return h.replace(/^\uFEFF/, '').toLowerCase().trim()
+}
+
+/** Convert any date-like value SheetJS might return to 'yyyy-MM-dd' */
+function toDateString(rawVal: unknown): string | null {
+  if (!rawVal && rawVal !== 0) return null
+  // SheetJS Date object (cellDates: true for XLSX)
+  if (rawVal instanceof Date) {
+    const y = rawVal.getFullYear()
+    const m = String(rawVal.getMonth() + 1).padStart(2, '0')
+    const d = String(rawVal.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  // Excel date serial (number) — SheetJS sometimes returns these even with cellDates
+  if (typeof rawVal === 'number') {
+    const d = XLSX.SSF.parse_date_code(rawVal)
+    if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
+    return null
+  }
+  const s = String(rawVal).trim()
+  if (!s) return null
+  // ISO timestamp: '2026-03-21T00:00:00.000Z'
+  if (s.includes('T')) return s.split('T')[0]
+  // Already 'yyyy-MM-dd'
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  // US format 'MM/DD/YYYY'
+  const parts = s.split('/')
+  if (parts.length === 3 && parts[2].length === 4) {
+    return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`
+  }
+  return s // fallback
+}
+
 export async function parseImportFile(
   file: File,
   ports: Port[],
@@ -139,7 +208,8 @@ export async function parseImportFile(
   const buffer = await file.arrayBuffer()
   const wb = XLSX.read(buffer, { type: 'array', cellDates: true })
   const ws = wb.Sheets[wb.SheetNames[0]]
-  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false })
+  // raw: true preserves numbers and Date objects; we handle formatting ourselves
+  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: true })
 
   if (raw.length === 0) return { rows: [], warnings: ['File is empty or has no data rows.'], skipped: 0 }
 
@@ -150,11 +220,11 @@ export async function parseImportFile(
     labelToKey.set(col.key.toLowerCase(), col.key) // also accept raw key names
   }
 
-  // Resolve first row's keys
+  // Resolve first row's keys — strip BOM from headers before matching
   const sampleKeys = Object.keys(raw[0] ?? {})
   const columnMap: Map<string, string> = new Map() // header → our key
   for (const header of sampleKeys) {
-    const mapped = labelToKey.get(header.toLowerCase().trim())
+    const mapped = labelToKey.get(normalizeHeader(header))
     if (mapped) columnMap.set(header, mapped)
   }
 
@@ -191,13 +261,8 @@ export async function parseImportFile(
           warnings.push(`Row ${i + 2}: License "${num}" not found — skipped`)
         }
       } else if (key === 'entryDate') {
-        // SheetJS may return a Date object or string
-        const dateStr = rawVal instanceof Date
-          ? rawVal.toISOString().split('T')[0]
-          : String(rawVal).includes('T')
-            ? String(rawVal).split('T')[0]
-            : String(rawVal)
-        partial.entryDate = dateStr
+        const dateStr = toDateString(rawVal)
+        if (dateStr) partial.entryDate = dateStr
       } else if (key === 'tankerNumber' || key === 'tonnageBasis') {
         partial[key] = String(rawVal).trim()
       } else {

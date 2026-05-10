@@ -63,7 +63,8 @@ export default function TopNav() {
   }
 
   const handleLogout = async () => {
-    await api.post('/auth/logout').catch(() => {})
+    // Best-effort server logout; always clear local auth regardless of outcome
+    await api.post('/auth/logout').catch(() => undefined)
     clearAuth()
   }
 
@@ -85,7 +86,7 @@ export default function TopNav() {
         {/* Dark mode toggle */}
         <button
           onClick={toggleDark}
-          title={dark ? 'Light mode' : 'Dark mode'}
+          title={dark ? t('grid.lightMode') : t('grid.darkMode')}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
         >
           {dark ? (

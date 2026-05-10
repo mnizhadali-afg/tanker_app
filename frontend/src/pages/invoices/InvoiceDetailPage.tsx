@@ -44,7 +44,9 @@ export default function InvoiceDetailPage() {
   const [showCancel, setShowCancel] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [noteCollapsed, setNoteCollapsed] = useState(false)
+  const [memoText, setMemoText] = useState<string>('')
+  const [memoEditing, setMemoEditing] = useState(false)
+  const [memoSaving, setMemoSaving] = useState(false)
   // Live tanker rows kept in sync with TankerGrid state for print
   const [liveRows, setLiveRows] = useState<TankerRow[]>([])
 
@@ -53,6 +55,7 @@ export default function InvoiceDetailPage() {
     api.get(`/invoices/${id}`)
       .then((r) => {
         setInvoice(r.data)
+        setMemoText(r.data.contract.notes ?? '')
         setLiveRows(r.data.tankers ?? [])
       })
       .catch(() => setError(t('errors.notFound')))
@@ -122,6 +125,23 @@ export default function InvoiceDetailPage() {
     ...(invoice.contract.otherDefaultCosts ?? {}),
   }
 
+  const handleMemoSave = async () => {
+    if (!invoice) return
+    setMemoSaving(true)
+    try {
+      await api.patch(`/contracts/${invoice.contract.id}`, { notes: memoText })
+      setInvoice((prev) => prev ? { ...prev, contract: { ...prev.contract, notes: memoText } } : prev)
+      setMemoEditing(false)
+    } finally {
+      setMemoSaving(false)
+    }
+  }
+
+  const handleMemoCancel = () => {
+    setMemoText(invoice.contract.notes ?? '')
+    setMemoEditing(false)
+  }
+
   // Build the invoice object for print, using live rows so print reflects current state
   const invoiceForPrint = { ...invoice, tankers: liveRows }
 
@@ -177,56 +197,68 @@ export default function InvoiceDetailPage() {
         onDelete={invoice.status !== 'final' ? () => setShowDelete(true) : undefined}
       />
 
-      {/* Contract memo — sticky note style, shown only when contract has notes */}
-      {invoice.contract.notes && (
-        <div className="relative rounded-lg overflow-hidden shadow-sm"
-             style={{ background: 'linear-gradient(135deg, #fefce8 85%, #fde68a 85%)' }}>
-
-          {/* Fold corner visual */}
-          <div className="absolute top-0 inset-e-0 w-6 h-6 pointer-events-none"
-               style={{ background: 'linear-gradient(225deg, #fbbf24 50%, transparent 50%)' }} />
-
-          {/* Pin icon */}
-          <div className="absolute top-2 inset-e-8 text-amber-500 select-none text-base leading-none">📌</div>
-
-          {/* Content */}
-          <div className="px-4 pt-3 pb-3">
-            {/* Header row */}
+      {/* Contract memo — inline editable, saves to contract */}
+      <div className="border border-dashed border-gray-200 dark:border-slate-600 rounded-lg px-4 py-3 group">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wide">
+            {t('invoices.contractMemo')}
+          </span>
+          <span className="text-xs text-gray-300 dark:text-slate-600">·</span>
+          <span className="text-xs text-gray-400 dark:text-slate-500">{invoice.contract.code}</span>
+          {!memoEditing && (
             <button
-              onClick={() => setNoteCollapsed((c) => !c)}
-              className="flex items-center gap-2 w-full text-start group mb-1"
+              onClick={() => setMemoEditing(true)}
+              className="ms-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs text-gray-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1 cursor-pointer"
             >
-              <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
               </svg>
-              <span className="text-xs font-bold text-amber-800 uppercase tracking-widest">
-                Contract Memo
-              </span>
-              <span className="text-xs text-amber-500 ms-1 font-normal normal-case tracking-normal">
-                — {invoice.contract.code}
-              </span>
-              <svg
-                className={`w-3.5 h-3.5 text-amber-500 ms-auto transition-transform duration-200 ${noteCollapsed ? 'rotate-180' : ''}`}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              {t('app.edit')}
             </button>
-
-            {/* Animated body */}
-            {!noteCollapsed && (
-              <p className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap italic ms-5 border-t border-amber-200 pt-2 mt-1">
-                {invoice.contract.notes}
-              </p>
-            )}
-          </div>
+          )}
         </div>
-      )}
+
+        {memoEditing ? (
+          <div className="space-y-2">
+            <textarea
+              autoFocus
+              value={memoText}
+              onChange={(e) => setMemoText(e.target.value)}
+              rows={3}
+              className="w-full text-sm text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              placeholder={t('invoices.contractMemoPlaceholder')}
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={handleMemoCancel}
+                className="text-xs px-3 py-1.5 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
+              >
+                {t('app.cancel')}
+              </button>
+              <button
+                onClick={handleMemoSave}
+                disabled={memoSaving}
+                className="text-xs px-3 py-1.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 cursor-pointer"
+              >
+                {memoSaving ? t('app.saving') : t('app.save')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p
+            onClick={() => setMemoEditing(true)}
+            className={`text-sm leading-relaxed whitespace-pre-wrap cursor-text ${memoText ? 'text-gray-600 dark:text-slate-300' : 'text-gray-300 dark:text-slate-600 italic'}`}
+          >
+            {memoText || t('invoices.contractMemoPlaceholder')}
+          </p>
+        )}
+      </div>
 
       {/* TankerGrid */}
       <TankerGrid
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoiceNumber}
+        customerName={invoice.customer.name}
         contractType={contractType}
         contractDefaults={contractDefaults}
         initialTankers={invoice.tankers}

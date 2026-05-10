@@ -307,6 +307,7 @@ model Tanker {
 
   @@index([invoiceId])
   @@index([contractId])
+  @@index([producerId])
   @@map("tankers")
 }
 

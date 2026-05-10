@@ -1,14 +1,16 @@
 import { Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore, type UserRole } from '../store/authStore'
 
 interface Props {
   children: React.ReactNode
+  /** If provided, user must have one of these roles — otherwise redirected to /dashboard */
+  requiredRoles?: UserRole[]
 }
 
-export default function ProtectedRoute({ children }: Props) {
-  const { isAuthenticated, setAuth } = useAuthStore()
+export default function ProtectedRoute({ children, requiredRoles }: Props) {
+  const { isAuthenticated, user, setAuth } = useAuthStore()
   const [checking, setChecking] = useState(!isAuthenticated)
 
   useEffect(() => {
@@ -37,6 +39,10 @@ export default function ProtectedRoute({ children }: Props) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
+  }
+
+  if (requiredRoles && user && !requiredRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

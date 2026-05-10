@@ -21,8 +21,9 @@ interface Props {
 }
 
 export default function InvoicePrintWrapper({ invoice, renderTrigger }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const printRef = useRef<HTMLDivElement>(null)
+  const dir = i18n.language === 'fa' ? 'rtl' : 'ltr'
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -46,7 +47,7 @@ export default function InvoicePrintWrapper({ invoice, renderTrigger }: Props) {
           Do NOT use display:none — that CSS class gets copied into the print iframe
           and hides the content, resulting in a blank printout. */}
       <div style={{ position: 'fixed', top: 0, left: '-10000px', width: '297mm' }} aria-hidden="true">
-        <div ref={printRef}>
+        <div ref={printRef} dir={dir} lang={i18n.language}>
           {calcType === 'per_ton' && (
             <PerTonTemplate invoice={invoice as unknown as Parameters<typeof PerTonTemplate>[0]['invoice']} />
           )}

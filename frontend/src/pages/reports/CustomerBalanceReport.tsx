@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import DataTable, { type Column } from '../../components/shared/DataTable'
 import AccountDrawer from '../accounts/AccountDrawer'
+import Modal from '../../components/shared/Modal'
+import PaymentFormPage from '../payments/PaymentFormPage'
 import { formatNumber } from '../../utils/formatting'
 import api from '../../lib/axios'
 
@@ -26,6 +28,7 @@ export default function CustomerBalanceReport() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [paymentCustomerId, setPaymentCustomerId] = useState<string | null>(null)
 
   useEffect(() => {
     api.get('/reports/customer-balances')
@@ -120,7 +123,20 @@ export default function CustomerBalanceReport() {
         totalCount={rows.length}
         label={t('accounts.types.customer')}
       />
-      <AccountDrawer accountId={selectedCustomerId} onClose={() => setSelectedCustomerId(null)} />
+      <AccountDrawer
+        accountId={selectedCustomerId}
+        onClose={() => setSelectedCustomerId(null)}
+        onNewPayment={(id) => { setSelectedCustomerId(null); setPaymentCustomerId(id); }}
+      />
+      {paymentCustomerId && (
+        <Modal title={t('payments.new')} onClose={() => setPaymentCustomerId(null)}>
+          <PaymentFormPage
+            initialCustomerId={paymentCustomerId}
+            onSuccess={() => setPaymentCustomerId(null)}
+            onCancel={() => setPaymentCustomerId(null)}
+          />
+        </Modal>
+      )}
     </div>
   )
 }

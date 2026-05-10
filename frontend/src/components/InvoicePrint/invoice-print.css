@@ -4,7 +4,13 @@
   font-size: 11px;
   color: #111827;
   padding: 24px;
-  direction: inherit; /* inherits from <html dir> */
+  direction: inherit; /* inherits from parent div[dir] set by InvoicePrintWrapper */
+}
+
+/* Number cells stay LTR regardless of page direction so digits read naturally */
+.invoice-print-table td:not(:first-child):not([data-label]) {
+  direction: ltr;
+  unicode-bidi: embed;
 }
 
 .invoice-print-header {

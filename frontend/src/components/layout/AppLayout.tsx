@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
+import ProtectedRoute from '../ProtectedRoute'
+import ErrorBoundary from '../shared/ErrorBoundary'
 
 import DashboardPage from '../../pages/dashboard/DashboardPage'
 
@@ -35,6 +37,7 @@ export default function AppLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopNav />
         <main className="flex-1 overflow-y-auto p-6 dark:bg-slate-900">
+          <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -62,13 +65,28 @@ export default function AppLayout() {
             <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
 
             <Route path="/payments" element={<PaymentsListPage />} />
-            <Route path="/payments/new" element={<PaymentFormPage />} />
+            <Route
+              path="/payments/new"
+              element={
+                <ProtectedRoute requiredRoles={['admin', 'accountant', 'data_entry']}>
+                  <PaymentFormPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/*" element={<ReportsPage />} />
 
-            <Route path="/users" element={<UsersPage />} />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute requiredRoles={['admin']}>
+                  <UsersPage />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

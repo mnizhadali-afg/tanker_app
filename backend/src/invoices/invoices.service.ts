@@ -7,8 +7,43 @@ import {
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateInvoiceDto } from './dto/create-invoice.dto'
 import { InvoiceFilterDto } from './dto/invoice-filter.dto'
+import jalaali from 'jalaali-js'
 
-const INVOICE_PREFIX = 'GAS-MO'
+// Words to strip before abbreviating (Farsi business entity types + common English equivalents)
+const SKIP_WORDS = new Set([
+  'شرکت', 'موسسه', 'مؤسسه', 'تعاونی', 'پالایشگاه', 'بانک', 'ملی',
+  'company', 'co', 'ltd', 'llc', 'inc',
+])
+
+/**
+ * Produce a short uppercase abbreviation from a name.
+ * Strategy:
+ *  1. Split on whitespace, drop generic entity-type words.
+ *  2. If the first meaningful word has ≥3 ASCII letters, use those.
+ *  3. Otherwise (Farsi names) take the first Unicode char of each remaining word.
+ */
+function abbrev(name: string, len = 3): string {
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .filter((w) => !SKIP_WORDS.has(w.toLowerCase()))
+
+  if (words.length === 0) return name.slice(0, len).toUpperCase().padEnd(len, 'X')
+
+  // Try ASCII letters from the first word
+  const firstAscii = words[0].replace(/[^a-zA-Z]/g, '')
+  if (firstAscii.length >= len) return firstAscii.slice(0, len).toUpperCase()
+
+  // Farsi path: take first char of each word
+  const initials = words.map((w) => w[0] ?? '').join('')
+  if (initials.length >= len) return initials.slice(0, len).toUpperCase()
+
+  return initials.toUpperCase().padEnd(len, 'X')
+}
+
+function shamsiYear(): number {
+  return jalaali.toJalaali(new Date()).jy
+}
 
 @Injectable()
 export class InvoicesService {
@@ -74,24 +109,32 @@ export class InvoicesService {
   }
 
   async create(dto: CreateInvoiceDto, userId: string) {
-    // Derive customerId from contract if not provided
-    let customerId = dto.customerId
-    if (!customerId) {
-      const contract = await this.prisma.contract.findUnique({
-        where: { id: dto.contractId },
-        select: { customerId: true, isActive: true },
-      })
-      if (!contract) throw new NotFoundException('errors.notFound')
-      if (!contract.isActive) throw new BadRequestException('errors.inactiveContract')
-      customerId = contract.customerId
-    }
+    // Fetch contract with customer and product names for invoice number generation
+    const contract = await this.prisma.contract.findUnique({
+      where: { id: dto.contractId },
+      select: {
+        customerId: true,
+        isActive: true,
+        customer: { select: { name: true } },
+        product: { select: { name: true } },
+      },
+    })
+    if (!contract) throw new NotFoundException('errors.notFound')
+    if (!contract.isActive) throw new BadRequestException('errors.inactiveContract')
+
+    const customerId = dto.customerId ?? contract.customerId
+
+    // Build dynamic prefix from customer + product abbreviations + Shamsi year
+    const custAbbr = abbrev(contract.customer.name)
+    const prodAbbr = abbrev(contract.product.name)
+    const year = shamsiYear()
 
     // Atomic invoice number generation using a Postgres sequence
     const result = await this.prisma.$queryRaw<[{ nextval: bigint }]>`
       SELECT nextval('invoice_number_seq')
     `
     const seq = Number(result[0].nextval)
-    const invoiceNumber = `${INVOICE_PREFIX}-${String(seq).padStart(4, '0')}`
+    const invoiceNumber = `${custAbbr}-${prodAbbr}-${year}-${String(seq).padStart(4, '0')}`
 
     return this.prisma.invoice.create({
       data: {

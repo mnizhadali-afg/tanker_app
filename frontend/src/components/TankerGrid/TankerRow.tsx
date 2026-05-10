@@ -1,4 +1,5 @@
 import React, { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import TankerCell from './TankerCell'
 import type { ColumnDef } from './columnDefs'
 import type { TankerRow as TankerRowData } from './useTankerGrid'
@@ -31,6 +32,7 @@ const TankerRowComponent = memo(function TankerRowComponent({
   onDelete,
   onDuplicate,
 }: Props) {
+  const { t } = useTranslation()
   const rowClass = [
     'flex border-b border-gray-200 dark:border-slate-700',
     row._saving ? 'opacity-60' : '',
@@ -80,8 +82,8 @@ const TankerRowComponent = memo(function TankerRowComponent({
             className="w-6 h-6 flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-blue-500 dark:hover:text-blue-400 rounded transition-colors"
             onClick={() => onDuplicate(row._localId)}
             tabIndex={-1}
-            title="Duplicate row"
-            aria-label="Duplicate row"
+            title={t('grid.duplicateRow')}
+            aria-label={t('grid.duplicateRow')}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -93,8 +95,8 @@ const TankerRowComponent = memo(function TankerRowComponent({
             className="w-6 h-6 flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
             onClick={() => onDelete(row._localId)}
             tabIndex={-1}
-            title="Delete row"
-            aria-label="Delete row"
+            title={t('grid.deleteRow')}
+            aria-label={t('grid.deleteRow')}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />

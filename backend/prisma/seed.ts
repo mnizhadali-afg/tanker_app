@@ -73,8 +73,21 @@ async function main() {
   await prisma.account.deleteMany({})
 
   // ── 1. Users ────────────────────────────────────────────────────────────────
-  const adminHash = await bcrypt.hash('admin123', 12)
-  const passHash  = await bcrypt.hash('pass123', 12)
+  // Passwords are read from environment variables so plaintext never lives in source.
+  // Set SEED_ADMIN_PASSWORD and SEED_USER_PASSWORD before running the seed,
+  // or fall back to generated random values that are printed once to stdout.
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? (() => {
+    const p = require('crypto').randomBytes(12).toString('hex')
+    console.log(`[seed] Generated admin password: ${p}`)
+    return p
+  })()
+  const userPassword = process.env.SEED_USER_PASSWORD ?? (() => {
+    const p = require('crypto').randomBytes(12).toString('hex')
+    console.log(`[seed] Generated user password (accountant1/data_entry1/viewer1): ${p}`)
+    return p
+  })()
+  const adminHash = await bcrypt.hash(adminPassword, 12)
+  const passHash  = await bcrypt.hash(userPassword, 12)
 
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
